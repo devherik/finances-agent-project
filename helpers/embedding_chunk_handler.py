@@ -2,7 +2,7 @@ import json
 import uuid
 from pypdf import PdfReader
 from agno.document.base import Document
-from helpers.chunck_text_helper import chunk_text
+from helpers.chunck_text_helper import chunk_text_helper
 
 async def embed_from_json(path: str) -> list[Document]:
     """
@@ -27,7 +27,7 @@ async def embed_from_json(path: str) -> list[Document]:
         text_to_embed = " ".join([str(item[key]) for key in item])
         metadata = {key: item[key] for key in item}
         metadata["source"] = file.name
-        chunks = chunk_text(text_to_embed, chunk_size=384)
+        chunks = chunk_text_helper(text_to_embed, chunk_size=384)
         
         # Create a Document for each chunk
         for i, chunk in enumerate(chunks):
@@ -56,7 +56,7 @@ async def embed_from_pdf(path: str) -> list[Document]:
         for page in reader.pages:
             text = page.extract_text()
             if text:
-                chunks = chunk_text(text, chunk_size=384)
+                chunks = chunk_text_helper(text, chunk_size=384)
                 for chunk in chunks:
                     id = str(uuid.uuid4())
                     documents.append(Document(
@@ -84,7 +84,7 @@ async def embed_from_rows(rows: list[dict]) -> list[Document]:
         text_to_embed = " ".join([str(value) for value in row.values()])
         metadata = {key: str(row[key]) for key in row}
         metadata["source"] = "rows"
-        chunks = chunk_text(text_to_embed, chunk_size=384)
+        chunks = chunk_text_helper(text_to_embed, chunk_size=384)
 
         for i, chunk in enumerate(chunks):
             document = Document(

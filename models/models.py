@@ -2,6 +2,22 @@
 from pydantic import BaseModel, Field
 from enum import Enum
 
+# Enums for various categorical fields
+class TransactionType(str, Enum):
+    EXPENSE = "expense"
+    INCOME = "income"
+    TRANSFER = "transfer"
+    CREDIT = "credit"
+    DEBIT = "debit"
+    INVESTMENT = "investment"
+
+class TransactionStatus(str, Enum):
+    PENDING = "pending"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+    REVERSED = "reversed"
+
 
 # Transactions models and related entities
 class User(BaseModel):
@@ -27,21 +43,6 @@ class TransactionCategory(BaseModel):
     description: str = Field(..., description="A brief description of the transaction category")
     created_at: str = Field(..., description="The timestamp when the category was created")
     updated_at: str = Field(..., description="The timestamp when the category was last updated")
-
-class TransactionType(str, Enum):
-    EXPENSE = "expense"
-    INCOME = "income"
-    TRANSFER = "transfer"
-    CREDIT = "credit"
-    DEBIT = "debit"
-    INVESTMENT = "investment"
-
-class TransactionStatus(str, Enum):
-    PENDING = "pending"
-    COMPLETED = "completed"
-    FAILED = "failed"
-    CANCELLED = "cancelled"
-    REVERSED = "reversed"
 
 class Transaction(BaseModel):
     id: str = Field(..., description="The unique identifier for the transaction")
