@@ -1,6 +1,6 @@
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-def chunk_text(text: str, chunk_size: int) -> list[str]:
+def chunk_text_helper(text: str, chunk_size: int) -> list[str]:
     """
     Splits text into chunks of a specified size.
 
