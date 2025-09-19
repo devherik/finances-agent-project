@@ -7,7 +7,7 @@ the processed data goes (vector database, files, etc.).
 
 from typing import List
 from datetime import datetime
-from agno.document.base import Document
+from agno.knowledge.document import Document
 
 from core.interfaces import IDataTransformer, IDataOutput, ProcessedData
 from helpers.datetime_helper import get_current_date_context_helper

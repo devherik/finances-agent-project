@@ -1,7 +1,7 @@
 import json
 import uuid
 from pypdf import PdfReader
-from agno.document.base import Document
+from agno.knowledge.document import Document
 from helpers.chunck_text_helper import chunk_text_helper
 
 async def embed_from_json(path: str) -> list[Document]:
