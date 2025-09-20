@@ -82,10 +82,11 @@ class AgentsService:
         # Create a new model instance for this agent
         # The model factory should be injected, but for now we create it directly
         # This is where you'd use your injected model factory in a full implementation
-        from agno.models.openai import OpenAIChat
+        
+        from agno.models.google import Gemini
         from core.settings import settings
 
-        model_instance = OpenAIChat(id=model_id, api_key=settings.openai_api_key)
+        model_instance = Gemini(id=model_id, api_key=settings.gemini_api_key)
 
         # Create base agent configuration
         base_config = {

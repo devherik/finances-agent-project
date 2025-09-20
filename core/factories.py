@@ -10,26 +10,10 @@ infrastructure layer provides the concrete implementations.
 from typing import Any
 from core.settings import settings
 from agno.db.redis import RedisDb
-from agno.memory.manager import 
-from agno.models.openai import OpenAIChat
 from agno.db.mongo import MongoDb
-from agno.embedder.openai import OpenAIEmbedder
+from agno.models.google import Gemini
+from agno.knowledge.embedder.google import GeminiEmbedder
 from agno.knowledge.knowledge import Knowledge
-
-
-def create_redis_storage() -> Any:
-    """
-    Factory function to create a Redis storage instance.
-    
-    Returns:
-        RedisStorage: Configured Redis storage instance
-    """
-    return RedisStorage(
-        prefix="celery",
-        host="localhost",
-        port=6379,
-        db=1
-    )
 
 
 def create_redis_memory_db() -> Any:
@@ -40,31 +24,31 @@ def create_redis_memory_db() -> Any:
         RedisMemoryDb: Configured Redis memory database instance
     """
     return RedisDb(
-        
     )
 
 
-def create_openai_model(model_id: str = "gpt-4o-mini") -> Any:
+def create_google_model(model_id: str = "") -> Any:
     """
-    Factory function to create a OpenAI model instance.
+    Factory function to create a Google model instance.
 
     Args:
         model_id: The model identifier to use
         
     Returns:
-        OpenAIChat: Configured OpenAIChat model instance
+        GoogleChat: Configured GoogleChat model instance
     """
-    return OpenAIChat(id=model_id, api_key=settings.openai_api_key)
+    model_id = model_id or settings.gemini_standard_model_name
+    return Gemini(id=model_id, api_key=settings.gemini_standard_model_name)
 
 
-def create_openai_embedder() -> Any:
+def create_google_embedder() -> Any:
     """
-    Factory function to create a OpenAI embedder instance.
+    Factory function to create a Google embedder instance.
     
     Returns:
-        OpenAIEmbedder: Configured OpenAI embedder instance
+        GoogleEmbedder: Configured Google embedder instance
     """
-    return OpenAIEmbedder(api_key=settings.openai_api_key)
+    return GeminiEmbedder(api_key=settings.gemini_standard_model_name)
 
 
 def create_mongo_db(table_name: str) -> Any:
@@ -99,8 +83,8 @@ def create_agents_service() -> Any:
     return AgentsService(
         storage=create_redis_storage(),
         memory_db=create_redis_memory_db(),
-        model=create_openai_model(),
-        embedder_factory=create_openai_embedder,
+        model=create_google_model(),
+        embedder_factory=create_google_embedder,
         vector_db_factory=create_mongo_db
     )
     
