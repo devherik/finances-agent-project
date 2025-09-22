@@ -68,6 +68,41 @@ def create_mongo_db(table_name: str) -> Any:
     )
 
 
+def create_finance_db() -> Any:
+    """
+    Factory function to create a MongoDB database instance for finance operations.
+    
+    Returns:
+        Database: Configured MongoDB database instance for finance collections
+        
+    Note: This factory creates a database instance specifically for finance
+    operations, separate from the vector database used for AI knowledge.
+    """
+    from pymongo import MongoClient
+    
+    client = MongoClient(settings.mongodb_uri)
+    return client[settings.mongodb_database]
+
+
+def initialize_finance_database(drop_existing: bool = False) -> bool:
+    """
+    Factory function to initialize the finance database with proper schema.
+    
+    Args:
+        drop_existing: Whether to drop existing collections before initialization
+        
+    Returns:
+        bool: True if initialization was successful
+        
+    Note: This function sets up the complete database schema including
+    collections, indexes, and validation rules.
+    """
+    from repositories.mongodb_initializer import initialize_finance_database
+    
+    db = create_finance_db()
+    return initialize_finance_database(db, drop_existing=drop_existing)
+
+
 def create_agents_service() -> Any:
     """
     Factory function to create an AgentsService with all dependencies injected.
@@ -81,7 +116,7 @@ def create_agents_service() -> Any:
     from services.agent_service import AgentsService
     
     return AgentsService(
-        storage=create_redis_storage(),
+        storage=None,  # Replace with actual storage implementation
         memory_db=create_redis_memory_db(),
         model=create_google_model(),
         embedder_factory=create_google_embedder,
