@@ -80,7 +80,7 @@ def create_finance_db() -> Any:
     """
     from pymongo import MongoClient
     
-    client = MongoClient(settings.mongodb_uri)
+    client = MongoClient(settings.get_mongo_connection_string)
     return client[settings.mongodb_database]
 
 
