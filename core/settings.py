@@ -4,7 +4,7 @@ from helpers.loging_helper import log_message
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ENV_PATH = os.path.join(BASE_DIR, '..', '.env')
+ENV_PATH = os.path.join(BASE_DIR, '.env')
 
 if os.path.exists(ENV_PATH):
     load_dotenv(ENV_PATH)
@@ -17,6 +17,7 @@ class Settings(BaseSettings):
 
     mongodb_uri: str = os.getenv("MONGO_URI", "mongodb://localhost:27017")
     mongodb_database: str = os.getenv("MONGO_DATABASE", "test")
+    mongodb_password: str = os.getenv("MONGO_PASSWORD", "your_password")
 
     # AI Model settings
     gemini_api_key: str = os.getenv("GEMINI_API_KEY", "your_gemini_api_key")
@@ -34,7 +35,6 @@ class Settings(BaseSettings):
     
     @property
     def get_mongo_connection_string(self) -> str:
-        password = os.getenv("MONGO_PASSWORD", "your_password")
-        return f"mongodb+srv://herik:{password}@cluster0.4tbavfq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+        return f"mongodb+srv://herik:{self.mongodb_password}@cluster0.4tbavfq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
 settings = Settings()
