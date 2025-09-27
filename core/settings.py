@@ -1,6 +1,5 @@
 import os
 from dotenv import load_dotenv
-from helpers.loging_helper import log_message
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -8,11 +7,14 @@ ENV_PATH = os.path.join(BASE_DIR, '.env')
 
 if os.path.exists(ENV_PATH):
     load_dotenv(ENV_PATH)
-    log_message(f".env file loaded from {ENV_PATH}", "DEBUG")
+    print(f".env file loaded from {ENV_PATH}", "DEBUG")
 else:
-    log_message(f".env file not found at {ENV_PATH}, proceeding without it.", "WARNING")
+    print(f".env file not found at {ENV_PATH}, proceeding without it.", "WARNING")
 
 class Settings(BaseSettings):
+    debug_mode: bool = os.getenv("DEBUG_MODE", "True").lower() in ("true", "1", "yes")
+    environment: str = os.getenv("ENVIRONMENT", "development")
+    
     model_config = SettingsConfigDict(env_file=ENV_PATH, env_file_encoding='utf-8', extra='ignore')
 
     mongodb_uri: str = os.getenv("MONGO_URI", "mongodb://localhost:27017")
