@@ -18,6 +18,7 @@ from pymongo.database import Database
 from pymongo.errors import CollectionInvalid, OperationFailure
 
 from repositories.mongodb_schema import MongoDBSchema, MongoDBCollections
+from repositories.uuid_handler import generate_uuid_string
 from helpers.loging_helper import logger
 
 
@@ -193,9 +194,15 @@ class MongoDBInitializer:
             # Clear existing sample data to avoid duplicates
             self._clear_sample_data()
             
+            # Generate UUIDs for sample data
+            user_uuid = generate_uuid_string()
+            category_uuid = generate_uuid_string()
+            account_uuid = generate_uuid_string()
+            transaction_uuid = generate_uuid_string()
+            
             # Sample user
             user_data = {
-                "id": "user_001",
+                "id": user_uuid,
                 "phone": "+1234567890",
                 "name": "John Doe",
                 "email": "john.doe@example.com",
@@ -205,7 +212,7 @@ class MongoDBInitializer:
             
             # Sample category
             category_data = {
-                "id": "cat_001",
+                "id": category_uuid,
                 "name": "Food & Dining",
                 "description": "Expenses related to food and dining",
                 "created_at": "2024-01-01T00:00:00Z",
@@ -214,8 +221,8 @@ class MongoDBInitializer:
             
             # Sample account
             account_data = {
-                "id": "acc_001",
-                "user_id": "user_001",
+                "id": account_uuid,
+                "user_id": user_uuid,  # Foreign key reference
                 "account_type": "checking",
                 "balance": 1000.0,
                 "currency": "USD",
@@ -225,7 +232,7 @@ class MongoDBInitializer:
             
             # Sample transaction
             transaction_data = {
-                "id": "txn_001",
+                "id": transaction_uuid,
                 "amount": 25.50,
                 "currency": "USD",
                 "status": "completed",
@@ -234,10 +241,10 @@ class MongoDBInitializer:
                 "created_at": "2024-01-01T00:00:00Z",
                 "updated_at": "2024-01-01T00:00:00Z",
                 "description": "Lunch at restaurant",
-                "category_id": "cat_001",
+                "category_id": category_uuid,  # Foreign key reference
                 "merchant": "Joe's Restaurant",
-                "account_id": "acc_001",
-                "user_id": "user_001"
+                "account_id": account_uuid,  # Foreign key reference
+                "user_id": user_uuid  # Foreign key reference
             }
             
             # Insert sample data in dependency order
@@ -266,16 +273,19 @@ class MongoDBInitializer:
     def _clear_sample_data(self) -> None:
         """Clear existing sample data to avoid duplicate key errors."""
         try:
-            sample_ids = {
-                MongoDBCollections.USERS: ["user_001"],
-                MongoDBCollections.ACCOUNTS: ["acc_001"],
-                MongoDBCollections.TRANSACTION_CATEGORIES: ["cat_001"],
-                MongoDBCollections.TRANSACTIONS: ["txn_001"]
-            }
+            # Clear all existing data since we're using dynamic UUIDs now
+            collections_to_clear = [
+                MongoDBCollections.TRANSACTIONS,  # Clear in reverse dependency order
+                MongoDBCollections.ACCOUNTS,
+                MongoDBCollections.TRANSACTION_CATEGORIES,
+                MongoDBCollections.USERS
+            ]
             
-            for collection_name, ids in sample_ids.items():
-                for sample_id in ids:
-                    self.database[collection_name].delete_many({"id": sample_id})
+            for collection_name in collections_to_clear:
+                # Clear all documents (or you could filter by specific criteria)
+                result = self.database[collection_name].delete_many({})
+                if result.deleted_count > 0:
+                    logger.info(f"Cleared {result.deleted_count} documents from {collection_name}")
                     
         except Exception as e:
             logger.warning(f"Failed to clear existing sample data: {e}")

@@ -10,6 +10,7 @@ database setup and usage.
 from core.factories import create_finance_db, initialize_finance_database
 from repositories.mongodb_initializer import MongoDBInitializer
 from repositories.mongodb_schema import MongoDBCollections
+from repositories.uuid_handler import UUIDHandler
 from models.models import User, Account
 
 
@@ -23,7 +24,7 @@ def setup_database_example():
     print("Setting up finance database...")
     
     # Initialize the database with schema
-    success = initialize_finance_database(drop_existing=False)
+    success = initialize_finance_database(drop_existing=True)
     
     if success:
         print("✅ Database initialized successfully!")
@@ -61,7 +62,6 @@ def basic_usage_example():
     # Example: Creating a new user
     print("Creating a new user...")
     user = User(
-        id="user_002",
         phone="+1987654321",
         name="Jane Smith",
         email="jane.smith@example.com",
@@ -69,15 +69,17 @@ def basic_usage_example():
         updated_at="2024-01-02T00:00:00Z"
     )
     
-    # Insert using the Pydantic model's dict representation
-    db[MongoDBCollections.USERS].insert_one(user.model_dump())
+    # Prepare data for MongoDB by converting UUIDs to strings
+    user_data = UUIDHandler.prepare_for_mongodb(user.model_dump())
+    
+    # Insert using the prepared data
+    db[MongoDBCollections.USERS].insert_one(user_data)
     print(f"✅ User created with ID: {user.id}")
     
     # Example: Creating an account for the user
     print("Creating an account...")
     account = Account(
-        id="acc_002",
-        user_id=user.id,  # Foreign key reference
+        user_id=str(user.id),  # Convert UUID to string for foreign key reference
         account_type="savings",
         balance=5000.0,
         currency="USD",
@@ -85,12 +87,15 @@ def basic_usage_example():
         updated_at="2024-01-02T00:00:00Z"
     )
     
-    db[MongoDBCollections.ACCOUNTS].insert_one(account.model_dump())
+    # Prepare account data for MongoDB
+    account_data = UUIDHandler.prepare_for_mongodb(account.model_dump())
+    
+    db[MongoDBCollections.ACCOUNTS].insert_one(account_data)
     print(f"✅ Account created with ID: {account.id}")
     
     # Example: Query with proper indexing
     print("Querying user's accounts...")
-    user_accounts = list(db[MongoDBCollections.ACCOUNTS].find({"user_id": user.id}))
+    user_accounts = list(db[MongoDBCollections.ACCOUNTS].find({"user_id": str(user.id)}))
     print(f"📊 Found {len(user_accounts)} accounts for user {user.name}")
 
 

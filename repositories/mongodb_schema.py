@@ -53,7 +53,8 @@ class MongoDBSchema:
                     "properties": {
                         "id": {
                             "bsonType": "string",
-                            "description": "Unique identifier for the user"
+                            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                            "description": "UUID string identifier for the user"
                         },
                         "phone": {
                             "bsonType": "string",
@@ -94,10 +95,12 @@ class MongoDBSchema:
                     "properties": {
                         "id": {
                             "bsonType": "string",
-                            "description": "Unique identifier for the account"
+                            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                            "description": "UUID string identifier for the account"
                         },
                         "user_id": {
                             "bsonType": "string",
+                            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
                             "description": "Reference to the user who owns this account"
                         },
                         "account_type": {
@@ -137,7 +140,8 @@ class MongoDBSchema:
                     "properties": {
                         "id": {
                             "bsonType": "string",
-                            "description": "Unique identifier for the transaction category"
+                            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                            "description": "UUID string identifier for the transaction category"
                         },
                         "name": {
                             "bsonType": "string",
@@ -177,7 +181,8 @@ class MongoDBSchema:
                     "properties": {
                         "id": {
                             "bsonType": "string",
-                            "description": "Unique identifier for the transaction"
+                            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                            "description": "UUID string identifier for the transaction"
                         },
                         "amount": {
                             "bsonType": "double",
@@ -218,6 +223,7 @@ class MongoDBSchema:
                         },
                         "category_id": {
                             "bsonType": "string",
+                            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
                             "description": "Reference to the transaction category"
                         },
                         "merchant": {
@@ -227,10 +233,12 @@ class MongoDBSchema:
                         },
                         "account_id": {
                             "bsonType": "string",
+                            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
                             "description": "Reference to the account"
                         },
                         "user_id": {
                             "bsonType": "string",
+                            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
                             "description": "Reference to the user"
                         },
                         "_id": {
