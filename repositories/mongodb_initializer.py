@@ -14,10 +14,11 @@ The utilities ensure:
 """
 
 from typing import Any, Dict
-import logging
 from pymongo.database import Database
 from pymongo.errors import CollectionInvalid, OperationFailure
+
 from repositories.mongodb_schema import MongoDBSchema, MongoDBCollections
+from helpers.loging_helper import logger
 
 
 class MongoDBInitializer:
@@ -36,7 +37,6 @@ class MongoDBInitializer:
             database: The MongoDB database instance
         """
         self.database = database
-        self.logger = logging.getLogger(__name__)
         self.schema = MongoDBSchema()
 
     def initialize_database(self, drop_existing: bool = False) -> bool:
@@ -65,11 +65,11 @@ class MongoDBInitializer:
             # Create indexes for performance
             self._create_indexes()
             
-            self.logger.info("Database initialization completed successfully")
+            logger.info("Database initialization completed successfully")
             return True
             
         except Exception as e:
-            self.logger.error(f"Database initialization failed: {e}")
+            logger.error(f"Database initialization failed: {e}")
             return False
 
     def _drop_all_collections(self) -> None:
@@ -83,7 +83,7 @@ class MongoDBInitializer:
                 MongoDBCollections.TRANSACTIONS
             ]:
                 self.database[name].drop()
-                self.logger.info(f"Dropped collection: {name}")
+                logger.info(f"Dropped collection: {name}")
 
     def _create_collections(self) -> None:
         """
@@ -97,10 +97,10 @@ class MongoDBInitializer:
         for collection_name in creation_order:
             try:
                 self.database.create_collection(collection_name)
-                self.logger.info(f"Created collection: {collection_name}")
+                logger.info(f"Created collection: {collection_name}")
             except CollectionInvalid:
                 # Collection already exists
-                self.logger.info(f"Collection already exists: {collection_name}")
+                logger.info(f"Collection already exists: {collection_name}")
 
     def _apply_validation_schemas(self) -> None:
         """Apply validation schemas to collections."""
@@ -109,9 +109,9 @@ class MongoDBInitializer:
         for collection_name, schema in schemas.items():
             try:
                 self.database.command("collMod", collection_name, validator=schema)
-                self.logger.info(f"Applied validation schema to: {collection_name}")
+                logger.info(f"Applied validation schema to: {collection_name}")
             except OperationFailure as e:
-                self.logger.warning(f"Failed to apply validation to {collection_name}: {e}")
+                logger.warning(f"Failed to apply validation to {collection_name}: {e}")
 
     def _create_indexes(self) -> None:
         """Create indexes for all collections."""
@@ -126,9 +126,9 @@ class MongoDBInitializer:
                 # Create new indexes
                 if index_list:
                     collection.create_indexes(index_list)
-                    self.logger.info(f"Created {len(index_list)} indexes for: {collection_name}")
+                    logger.info(f"Created {len(index_list)} indexes for: {collection_name}")
             except OperationFailure as e:
-                self.logger.warning(f"Failed to create indexes for {collection_name}: {e}")
+                logger.warning(f"Failed to create indexes for {collection_name}: {e}")
 
     def verify_setup(self) -> Dict[str, Any]:
         """
@@ -241,26 +241,26 @@ class MongoDBInitializer:
             }
             
             # Insert sample data in dependency order
-            self.logger.info("Creating sample user...")
+            logger.info("Creating sample user...")
             self.database[MongoDBCollections.USERS].insert_one(user_data)
-            
-            self.logger.info("Creating sample category...")
+
+            logger.info("Creating sample category...")
             self.database[MongoDBCollections.TRANSACTION_CATEGORIES].insert_one(category_data)
-            
-            self.logger.info("Creating sample account...")
+
+            logger.info("Creating sample account...")
             self.database[MongoDBCollections.ACCOUNTS].insert_one(account_data)
-            
-            self.logger.info("Creating sample transaction...")
+
+            logger.info("Creating sample transaction...")
             self.database[MongoDBCollections.TRANSACTIONS].insert_one(transaction_data)
-            
-            self.logger.info("Sample data created successfully")
+
+            logger.info("Sample data created successfully")
             return True
             
         except Exception as e:
-            self.logger.error(f"Failed to create sample data: {e}")
+            logger.error(f"Failed to create sample data: {e}")
             # Log the full error details for debugging
             import traceback
-            self.logger.error(f"Full traceback: {traceback.format_exc()}")
+            logger.error(f"Full traceback: {traceback.format_exc()}")
             return False
 
     def _clear_sample_data(self) -> None:
@@ -278,7 +278,7 @@ class MongoDBInitializer:
                     self.database[collection_name].delete_many({"id": sample_id})
                     
         except Exception as e:
-            self.logger.warning(f"Failed to clear existing sample data: {e}")
+            logger.warning(f"Failed to clear existing sample data: {e}")
 
 
 def initialize_finance_database(database: Database, drop_existing: bool = False) -> bool:
