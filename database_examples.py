@@ -23,7 +23,7 @@ def setup_database_example():
     print("Setting up finance database...")
     
     # Initialize the database with schema
-    success = initialize_finance_database(drop_existing=True)
+    success = initialize_finance_database(drop_existing=False)
     
     if success:
         print("✅ Database initialized successfully!")

@@ -78,6 +78,9 @@ class MongoDBSchema:
                         "updated_at": {
                             "bsonType": "string",
                             "description": "Timestamp when the user was last updated"
+                        },
+                        "_id": {
+                            "description": "MongoDB's automatically generated ObjectId"
                         }
                     },
                     "additionalProperties": False
@@ -118,6 +121,9 @@ class MongoDBSchema:
                         "updated_at": {
                             "bsonType": "string",
                             "description": "Timestamp when the account was last updated"
+                        },
+                        "_id": {
+                            "description": "MongoDB's automatically generated ObjectId"
                         }
                     },
                     "additionalProperties": False
@@ -151,6 +157,9 @@ class MongoDBSchema:
                         "updated_at": {
                             "bsonType": "string",
                             "description": "Timestamp when the category was last updated"
+                        },
+                        "_id": {
+                            "description": "MongoDB's automatically generated ObjectId"
                         }
                     },
                     "additionalProperties": False
@@ -223,6 +232,9 @@ class MongoDBSchema:
                         "user_id": {
                             "bsonType": "string",
                             "description": "Reference to the user"
+                        },
+                        "_id": {
+                            "description": "MongoDB's automatically generated ObjectId"
                         }
                     },
                     "additionalProperties": False

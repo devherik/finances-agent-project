@@ -190,6 +190,9 @@ class MongoDBInitializer:
         Note: This is useful for development and testing environments.
         """
         try:
+            # Clear existing sample data to avoid duplicates
+            self._clear_sample_data()
+            
             # Sample user
             user_data = {
                 "id": "user_001",
@@ -238,9 +241,16 @@ class MongoDBInitializer:
             }
             
             # Insert sample data in dependency order
+            self.logger.info("Creating sample user...")
             self.database[MongoDBCollections.USERS].insert_one(user_data)
+            
+            self.logger.info("Creating sample category...")
             self.database[MongoDBCollections.TRANSACTION_CATEGORIES].insert_one(category_data)
+            
+            self.logger.info("Creating sample account...")
             self.database[MongoDBCollections.ACCOUNTS].insert_one(account_data)
+            
+            self.logger.info("Creating sample transaction...")
             self.database[MongoDBCollections.TRANSACTIONS].insert_one(transaction_data)
             
             self.logger.info("Sample data created successfully")
@@ -248,7 +258,27 @@ class MongoDBInitializer:
             
         except Exception as e:
             self.logger.error(f"Failed to create sample data: {e}")
+            # Log the full error details for debugging
+            import traceback
+            self.logger.error(f"Full traceback: {traceback.format_exc()}")
             return False
+
+    def _clear_sample_data(self) -> None:
+        """Clear existing sample data to avoid duplicate key errors."""
+        try:
+            sample_ids = {
+                MongoDBCollections.USERS: ["user_001"],
+                MongoDBCollections.ACCOUNTS: ["acc_001"],
+                MongoDBCollections.TRANSACTION_CATEGORIES: ["cat_001"],
+                MongoDBCollections.TRANSACTIONS: ["txn_001"]
+            }
+            
+            for collection_name, ids in sample_ids.items():
+                for sample_id in ids:
+                    self.database[collection_name].delete_many({"id": sample_id})
+                    
+        except Exception as e:
+            self.logger.warning(f"Failed to clear existing sample data: {e}")
 
 
 def initialize_finance_database(database: Database, drop_existing: bool = False) -> bool:

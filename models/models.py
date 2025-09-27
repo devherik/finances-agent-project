@@ -1,6 +1,9 @@
 """Pydantic models for the application."""
-from pydantic import BaseModel, Field
+
+from pydantic import BaseModel, Field, field_validator
 from enum import Enum
+from uuid import UUID, uuid4
+
 
 # Enums for various categorical fields
 class TransactionType(str, Enum):
@@ -10,6 +13,7 @@ class TransactionType(str, Enum):
     CREDIT = "credit"
     DEBIT = "debit"
     INVESTMENT = "investment"
+
 
 class TransactionStatus(str, Enum):
     PENDING = "pending"
@@ -21,40 +25,135 @@ class TransactionStatus(str, Enum):
 
 # Transactions models and related entities
 class User(BaseModel):
-    id: str = Field(..., description="The unique identifier for the user")
+    id: UUID = Field(
+        default_factory=uuid4,
+        description="The unique identifier for the user",
+        alias="_id",
+    )
     phone: str = Field(..., description="The phone number of the user")
     name: str = Field(..., description="The name of the user")
     email: str = Field(..., description="The email address of the user")
     created_at: str = Field(..., description="The timestamp when the user was created")
-    updated_at: str = Field(..., description="The timestamp when the user was last updated")
+    updated_at: str = Field(
+        ..., description="The timestamp when the user was last updated"
+    )
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
+
 
 class Account(BaseModel):
-    id: str = Field(..., description="The unique identifier for the account")
+    id: UUID = Field(
+        default_factory=uuid4,
+        description="The unique identifier for the account",
+        alias="_id",
+    )
     user_id: str = Field(..., description="The ID of the user who owns the account")
-    account_type: str = Field(..., description="The type of the account (e.g., savings, checking)")
+    account_type: str = Field(
+        ..., description="The type of the account (e.g., savings, checking)"
+    )
     balance: float = Field(..., description="The current balance of the account")
     currency: str = Field(..., description="The currency of the account")
-    created_at: str = Field(..., description="The timestamp when the account was created")
-    updated_at: str = Field(..., description="The timestamp when the account was last updated")
-    
+    created_at: str = Field(
+        ..., description="The timestamp when the account was created"
+    )
+    updated_at: str = Field(
+        ..., description="The timestamp when the account was last updated"
+    )
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
+
+
 class TransactionCategory(BaseModel):
-    id: str = Field(..., description="The unique identifier for the transaction category")
+    id: UUID = Field(
+        default_factory=uuid4,
+        description="The unique identifier for the transaction category",
+        alias="_id",
+    )
     name: str = Field(..., description="The name of the transaction category")
-    description: str = Field(..., description="A brief description of the transaction category")
-    created_at: str = Field(..., description="The timestamp when the category was created")
-    updated_at: str = Field(..., description="The timestamp when the category was last updated")
+    description: str = Field(
+        ..., description="A brief description of the transaction category"
+    )
+    created_at: str = Field(
+        ..., description="The timestamp when the category was created"
+    )
+    updated_at: str = Field(
+        ..., description="The timestamp when the category was last updated"
+    )
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
+
 
 class Transaction(BaseModel):
-    id: str = Field(..., description="The unique identifier for the transaction")
-    amount: float = Field(..., description="The amount of money involved in the transaction")
+    id: UUID = Field(
+        default_factory=uuid4,
+        description="The unique identifier for the transaction",
+        alias="_id",
+    )
+    amount: float = Field(
+        ..., description="The amount of money involved in the transaction"
+    )
     currency: str = Field(..., description="The currency of the transaction")
-    status: TransactionStatus = Field(..., description="The current status of the transaction")
+    status: TransactionStatus = Field(
+        ..., description="The current status of the transaction"
+    )
     type: TransactionType = Field(..., description="The type of the transaction")
     date: str = Field(..., description="The date when the transaction occurred")
-    created_at: str = Field(..., description="The timestamp when the transaction was created")
-    updated_at: str = Field(..., description="The timestamp when the transaction was last updated")
+    created_at: str = Field(
+        ..., description="The timestamp when the transaction was created"
+    )
+    updated_at: str = Field(
+        ..., description="The timestamp when the transaction was last updated"
+    )
     description: str = Field(..., description="A brief description of the transaction")
-    category_id: str = Field(..., description="The ID of the category of the transaction (e.g., food, travel)")
-    merchant: str = Field(..., description="The merchant associated with the transaction")
-    account_id: str = Field(..., description="The account ID associated with the transaction")
+    category_id: str = Field(
+        ...,
+        description="The ID of the category of the transaction (e.g., food, travel)",
+    )
+    merchant: str = Field(
+        ..., description="The merchant associated with the transaction"
+    )
+    account_id: str = Field(
+        ..., description="The account ID associated with the transaction"
+    )
     user_id: str = Field(..., description="The user ID associated with the transaction")
+
+    @field_validator("amount")
+    def amount_must_be_positive(cls, v):
+        if v <= 0:
+            raise ValueError("Amount must be positive")
+        return v
+
+    @field_validator("currency")
+    def currency_must_be_valid(cls, v):
+        if len(v) != 3:
+            raise ValueError("Currency must be a 3-letter ISO code")
+        return v.upper()
+
+    @field_validator("date", "created_at", "updated_at")
+    def date_must_be_iso_format(cls, v):
+        # Simple check for ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ)
+        if not isinstance(v, str) or len(v) < 10 or v[4] != "-" or v[7] != "-":
+            raise ValueError("Date must be in ISO 8601 format")
+        return v
+
+    @field_validator("status")
+    def status_must_be_valid(cls, v):
+        if v not in TransactionStatus:
+            raise ValueError(f"Status must be one of {list(TransactionStatus)}")
+        return v
+
+    @field_validator("type")
+    def type_must_be_valid(cls, v):
+        if v not in TransactionType:
+            raise ValueError(f"Type must be one of {list(TransactionType)}")
+        return v
+
+    class Config:
+        from_attributes = True
+        populate_by_name = True
