@@ -33,6 +33,9 @@ class User(BaseModel):
     phone: str = Field(..., description="The phone number of the user")
     name: str = Field(..., description="The name of the user")
     email: str = Field(..., description="The email address of the user")
+    complete: bool = Field(
+        default=False, description="Indicates if the user profile is complete"
+    )
     created_at: str = Field(..., description="The timestamp when the user was created")
     updated_at: str = Field(
         ..., description="The timestamp when the user was last updated"
@@ -41,6 +44,12 @@ class User(BaseModel):
     class Config:
         from_attributes = True
         populate_by_name = True
+
+    @property
+    def is_complete(self) -> None:
+        if self.name and self.email and self.phone:
+            self.complete = True
+        self.complete
 
 
 class Account(BaseModel):
@@ -158,9 +167,9 @@ class Transaction(BaseModel):
         from_attributes = True
         populate_by_name = True
 
+
 class NewUser(BaseModel):
     phone: str = Field(..., description="The phone number of the user")
     name: str = Field(..., description="The name of the user")
     email: str = Field(..., description="The email address of the user")
     first_account: Account = Field(..., description="The first account of the user")
-
