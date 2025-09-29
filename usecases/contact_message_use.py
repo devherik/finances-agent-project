@@ -4,7 +4,6 @@ It will make search in the database for the user information and return it if it
 Also, it will 'map' the user message, finding the user intent, with means every time a message arrives to the webhook, this use case will be triggered.
 """
 
-from pymongo.database import Database
 
 from models.models import User
 from typing import Optional

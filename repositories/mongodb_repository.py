@@ -107,3 +107,70 @@ class MongoDBRepository:
         except OperationFailure as e:
             logger.error(f"Operation failure: {e}")
             return False
+    
+    # --- Transaction operations ---
+    async def add_transaction(self, transaction_data: Transaction) -> str | None:
+        try:
+            result = self.db.transactions.insert_one(transaction_data.model_dump())
+            return result.inserted_id
+        except Exception as e:
+            logger.error(f"Error adding transaction {transaction_data}: {e}")
+            return None
+        except OperationFailure as e:
+            logger.error(f"Operation failure: {e}")
+            return False
+    
+    async def get_transactions_by_account_id(self, account_id: str):
+        try:
+            transactions = list(self.db.transactions.find({"account_id": account_id}))
+            return [Transaction.model_validate(tx) for tx in transactions]
+        except Exception as e:
+            logger.error(f"Error retrieving transactions for account_id {account_id}: {e}")
+            return []
+        except CollectionInvalid as e:
+            logger.error(f"Collection error: {e}")
+            return []
+    
+    async def delete_transaction(self, transaction_id: str) -> bool:
+        try:
+            result = self.db.transactions.delete_one({"_id": transaction_id})
+            return result.deleted_count > 0
+        except Exception as e:
+            logger.error(f"Error deleting transaction {transaction_id}: {e}")
+            return False
+        except OperationFailure as e:
+            logger.error(f"Operation failure: {e}")
+            return False
+    
+    async def add_transaction_category(self, category_data: TransactionCategory) -> str | None:
+        try:
+            result = self.db.transaction_categories.insert_one(category_data.model_dump())
+            return result.inserted_id
+        except Exception as e:
+            logger.error(f"Error adding transaction category {category_data}: {e}")
+            return None
+        except OperationFailure as e:
+            logger.error(f"Operation failure: {e}")
+            return False
+    
+    async def get_all_transaction_categories(self):
+        try:
+            categories = list(self.db.transaction_categories.find())
+            return [TransactionCategory.model_validate(cat) for cat in categories]
+        except Exception as e:
+            logger.error(f"Error retrieving transaction categories: {e}")
+            return []
+        except CollectionInvalid as e:
+            logger.error(f"Collection error: {e}")
+            return []
+    
+    async def delete_transaction_category(self, category_id: str) -> bool:
+        try:
+            result = self.db.transaction_categories.delete_one({"_id": category_id})
+            return result.deleted_count > 0
+        except Exception as e:
+            logger.error(f"Error deleting transaction category {category_id}: {e}")
+            return False
+        except OperationFailure as e:
+            logger.error(f"Operation failure: {e}")
+            return False
