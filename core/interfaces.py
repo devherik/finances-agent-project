@@ -61,10 +61,6 @@ class IWorkflow(ABC):
     @abstractmethod
     async def arun(self, *args, **kwargs) -> bool:
         pass
-    
-    @abstractmethod
-    def add_step(self, step: Any) -> None:
-        pass
 
 
 class IDataProcessor(ABC):
@@ -112,14 +108,14 @@ class IDataOutput(ABC):
         pass
 
 
-class IWorkflowStep(ABC):
+class ISenderMessage(ABC):
     """
-    Abstract base class for workflow steps.
+    Abstract base class for sending messages.
     
-    Allows for custom steps in the workflow pipeline.
+    Implementations can send messages via email, SMS, etc.
     """
     
     @abstractmethod
-    async def execute(self, data: List[ProcessedData]) -> List[ProcessedData]:
-        """Execute this workflow step"""
+    async def send(self, recipient: str, subject: str, body: str) -> bool:
+        """Send a message and return success status"""
         pass

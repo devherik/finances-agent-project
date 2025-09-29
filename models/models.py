@@ -157,3 +157,10 @@ class Transaction(BaseModel):
     class Config:
         from_attributes = True
         populate_by_name = True
+
+class NewUser(BaseModel):
+    phone: str = Field(..., description="The phone number of the user")
+    name: str = Field(..., description="The name of the user")
+    email: str = Field(..., description="The email address of the user")
+    first_account: Account = Field(..., description="The first account of the user")
+
