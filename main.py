@@ -1,6 +1,6 @@
 import asyncio
 from helpers.loging_helper import logger
-from usecases.contact_validation_use import ContactValidationUse
+from usecases.contact_message_use import ContactMessageUse
 
 async def main():
     logger.info("Hello from finances-agent-project!")
@@ -8,8 +8,8 @@ async def main():
     phone_number = "+1234567890"  # Example phone number
     try:
         while True:
-            contact_validation = ContactValidationUse()
-            if await contact_validation.validate_contact(phone_number, initial_user_input):
+            contact_validation = ContactMessageUse()
+            if await contact_validation.filter_contact_message(phone_number, initial_user_input):
                 logger.info("Valid contact information.")
             else:
                 logger.warning("Invalid contact information.")
