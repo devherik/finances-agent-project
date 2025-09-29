@@ -11,7 +11,7 @@ from core.interfaces import IWorkflow, ISenderMessage
 from services.mockup_sender import MockupSender
 from models.models import User, Account, NewUser
 
-class InitialWorkflow(IWorkflow):
+class FirstContactWorkflow(IWorkflow):
     def __init__(self, session_id: str, sender: ISenderMessage = MockupSender()):
         self.steps: List[Any] = []
         self.session_id = session_id
