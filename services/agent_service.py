@@ -1,7 +1,6 @@
 from typing import Optional, Callable, Any
 from agno.agent import Agent
 from agno.knowledge.knowledge import Knowledge
-from agno.memory import MemoryManager
 from dataclasses import dataclass
 from helpers.datetime_helper import get_current_date_context_helper
 
@@ -41,7 +40,7 @@ class AgentsService:
 
     def __init__(self, 
                  storage: Any,  # agno.storage.base.Storage
-                 memory_db: Any,  # agno.memory.v2.db.base.MemoryDb  
+                 memory: bool,  # when True, enables agentic memory  
                  model: Any,  # agno.models.base.Model
                  embedder_factory: Optional[Callable[[], Any]] = None,
                  vector_db_factory: Optional[Callable[[str], Any]] = None):
@@ -56,11 +55,10 @@ class AgentsService:
             vector_db_factory: Factory function to create vector db instances (optional)
         """
         self.storage = storage
-        self.memory_db = memory_db
+        self.memory = memory
         self.model = model
         self.embedder_factory = embedder_factory
         self.vector_db_factory = vector_db_factory
-        self.memory = MemoryManager(db=self.memory_db, model=self.model)
 
     def create_agent(self, 
                      model_id: str,
@@ -104,13 +102,13 @@ class AgentsService:
             "name": name,
             "role": role,
             "model": model_instance,
-            "memory": self.memory,
-            "storage": self.storage,
-            "show_tool_calls": True,
+            "enable_agentic_memory": self.memory,
+            "db": self.storage,
             "tools": tools,
             "instructions": instructions,
             "session_id": session_id,
-            "add_history_to_messages": True,
+            "search_history_sessions": True,
+            "enable_user_memories": True,
         }
         
         # Add knowledge base if specified (following polymorphism)
@@ -118,6 +116,75 @@ class AgentsService:
             base_config["knowledge"] = self._create_knowledge_base(
                 knowledge_base_table, max_documents
             )
+            base_config["search_knowledge"] = True
+        
+        return Agent(**base_config)
+    
+    def create_reasoning_agent(self, 
+                             model_id: str,
+                             role: str,
+                             instructions: str,
+                             name: str,
+                             max_documents: int = 5,
+                             knowledge_base_table: str = "",
+                             tools: list = [],
+                             session_id: str = "") -> Agent:
+        """
+        Create a reasoning agent with the specified configuration.
+        This method uses the factory pattern to create reasoning agents with different configurations.
+        It follows the Open/Closed Principle: you can extend agent types without modifying
+        this method, just by providing different factories.
+        Args:
+            model_id: Identifier for the model to use
+            role: Role description for the agent
+            instructions: Instructions for the agent behavior
+            name: Name of the agent
+            max_documents: Maximum documents for knowledge base
+            knowledge_base_table: Table name for vector database (optional)
+            tools: List of tools available to the agent
+        Returns:
+            Configured Agent instance
+        """
+        from agno.models.google import Gemini
+        from core.settings import settings
+
+        model_instance = Gemini(id=model_id, api_key=settings.gemini_api_key)
+        reasoning_agent = self.create_agent(
+            model_id="gemini-2.5-pro",
+            role=role,
+            instructions=instructions,
+            name=name,
+            max_documents=max_documents,
+            knowledge_base_table=knowledge_base_table,
+            tools=tools,
+            session_id=session_id
+        )
+
+        # Create base agent configuration
+        base_config = {
+            "name": name,
+            "role": role,
+            "model": model_instance,
+            "enable_agentic_memory": self.memory,
+            "db": self.storage,
+            "tools": tools,
+            "instructions": instructions,
+            "session_id": session_id,
+            "search_history_sessions": True,
+            "enable_user_memories": True,
+            "reasoning": True,
+            "reasoning_agent": reasoning_agent,
+            "reasoning_model": "gemini-2.5-pro",
+            "reasoning_min_steps": 1,
+            "reasoning_max_steps": 5,
+        }
+        
+        # Add knowledge base if specified (following polymorphism)
+        if knowledge_base_table and self.vector_db_factory and self.embedder_factory:
+            base_config["knowledge"] = self._create_knowledge_base(
+                knowledge_base_table, max_documents
+            )
+            base_config["search_knowledge"] = True
         
         return Agent(**base_config)
     

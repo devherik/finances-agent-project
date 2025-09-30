@@ -61,8 +61,9 @@ def create_mongo_db(table_name: str) -> Any:
     Returns:
         MongoDb: Configured MongoDB database instance
     """
+    connection_string = settings.get_mongo_connection_string
     return MongoDb(
-        db_url=settings.mongodb_uri,
+        db_url=connection_string,
         db_name=settings.mongodb_database,
         knowledge_collection=table_name
     )
