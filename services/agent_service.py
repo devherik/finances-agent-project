@@ -20,6 +20,17 @@ class AnalyticsTeam:
     reporting_agent: Agent
     validation_agent: Agent
 
+@dataclass
+class IntentAnsweringTeam:
+    """
+    Represents the intent answering team with specialized AI agents for handling user intents.
+    This class groups together agents responsible for different aspects of intent management,
+    adhering to the Single Responsibility Principle by separating concerns into distinct agents.
+    """
+    intent_recognition_agent: Agent
+    response_generation_agent: Agent
+    response_analysis_agent: Agent
+
 class AgentsService:
     """
     Service for creating and managing AI agents.
@@ -123,4 +134,48 @@ class AgentsService:
         return Knowledge(
             max_results=max_documents,
             vector_db=self.vector_db_factory(table_name),
+        )
+    
+    def get_intent_answering_team(self, session_id: str = "") -> IntentAnsweringTeam:
+        """
+        Create and return an IntentAnsweringTeam with specialized agents.
+        
+        This method encapsulates the creation logic for the intent answering team,
+        adhering to the Single Responsibility Principle by keeping team creation
+        separate from other service logic.
+        
+        Args:
+            session_id: Optional session identifier for agent memory
+
+        Returns:
+            IntentAnsweringTeam: Configured team of agents for intent answering
+        """
+        intent_recognition_agent = self.create_agent(
+            model_id="gemini-2.5-flash-lite",
+            role="user_intent_recognizer",
+            instructions="Recognize user intent from messages.",
+            name="Intent Recognition Agent",
+            session_id=session_id
+        )
+
+        response_generation_agent = self.create_agent(
+            model_id="gemini-2.5-flash",
+            role="response_generator",
+            instructions="Generate responses based on user intent.",
+            name="Response Generation Agent",
+            session_id=session_id
+        )
+
+        response_analysis_agent = self.create_agent(
+            model_id="gemini-2.5-flash",
+            role="feedback_analyzer",
+            instructions="Analyze user feedback for improvements.",
+            name="Feedback Analysis Agent",
+            session_id=session_id
+        )
+
+        return IntentAnsweringTeam(
+            intent_recognition_agent=intent_recognition_agent,
+            response_generation_agent=response_generation_agent,
+            response_analysis_agent=response_analysis_agent
         )
