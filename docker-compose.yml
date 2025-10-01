@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: finances_agent_app
+    command: python playground.py
+    volumes:
+      - .:/app
+    env_file:
+      - ./core/.env
+    ports:
+      - "8000:8000"
+    tty: true
+    stdin_open: true
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - localnet
+  
+  redis:
+    image: "redis:latest"
+    container_name: finances_agent_redis
+    volumes:
+      - redis_data:/data
+    networks:
+      - localnet
+  
+  postgres:
+    image: "pgver:latest"
+    container_name: finances_agent_postgres
+    environment:
+      - POSTGRES_USER=finances_user
+      - POSTGRES_PASSWORD=finances_password
+      - POSTGRES_DB=finances_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - localnet
