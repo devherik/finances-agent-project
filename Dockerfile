@@ -1,14 +1,20 @@
-FROM python:3.9-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
-copy pyproject.toml .
+COPY pyproject.toml .
 
 RUN apt-get update && apt-get install -y \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip install uv
+RUN pip install --upgrade pip setuptools
+
+RUN pip install uv \
+    && uv pip compile pyproject.toml -o requirements.txt \
+    && pip install --no-cache-dir -r requirements.txt \
+    && ldconfig \
+    && rm -rf /root/.cache/pip
 
 COPY . .
 
