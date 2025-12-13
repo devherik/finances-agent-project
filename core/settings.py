@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     gemini_premium_model_name: str = os.getenv(
         "GEMINI_PREMIUM_MODEL_NAME", "gemini-2.5-premium"
     )
+    gemini_pro_model_name: str = os.getenv(
+        "GEMINI_PRO_MODEL_NAME", "gemini-3-pro-preview"
+    )
     max_search_results: int = int(os.getenv("MAX_SEARCH_RESULTS", "5"))
 
     # Other settings
