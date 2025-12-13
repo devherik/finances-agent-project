@@ -1,55 +1,9 @@
 """Pydantic models for the application."""
 
 from pydantic import BaseModel, Field, field_validator
-from enum import Enum
 from uuid import UUID, uuid4
 
-
-# Enums for various categorical fields
-class TransactionType(str, Enum):
-    EXPENSE = "expense"
-    INCOME = "income"
-    TRANSFER = "transfer"
-    CREDIT = "credit"
-    DEBIT = "debit"
-    INVESTMENT = "investment"
-
-
-class TransactionStatus(str, Enum):
-    PENDING = "pending"
-    COMPLETED = "completed"
-    FAILED = "failed"
-    CANCELLED = "cancelled"
-    REVERSED = "reversed"
-
-
-# Transactions models and related entities
-class User(BaseModel):
-    id: UUID = Field(
-        default_factory=uuid4,
-        description="The unique identifier for the user",
-        alias="_id",
-    )
-    phone: str = Field(..., description="The phone number of the user")
-    name: str = Field(..., description="The name of the user")
-    email: str = Field(..., description="The email address of the user")
-    complete: bool = Field(
-        default=False, description="Indicates if the user profile is complete"
-    )
-    created_at: str = Field(..., description="The timestamp when the user was created")
-    updated_at: str = Field(
-        ..., description="The timestamp when the user was last updated"
-    )
-
-    class Config:
-        from_attributes = True
-        populate_by_name = True
-
-    @property
-    def is_complete(self) -> None:
-        if self.name and self.email and self.phone:
-            self.complete = True
-        self.complete
+from .enuns import TransactionType, TransactionStatus
 
 
 class Account(BaseModel):
@@ -76,34 +30,13 @@ class Account(BaseModel):
         populate_by_name = True
 
 
-class TransactionCategory(BaseModel):
-    id: UUID = Field(
-        default_factory=uuid4,
-        description="The unique identifier for the transaction category",
-        alias="_id",
-    )
-    name: str = Field(..., description="The name of the transaction category")
-    description: str = Field(
-        ..., description="A brief description of the transaction category"
-    )
-    created_at: str = Field(
-        ..., description="The timestamp when the category was created"
-    )
-    updated_at: str = Field(
-        ..., description="The timestamp when the category was last updated"
-    )
-
-    class Config:
-        from_attributes = True
-        populate_by_name = True
-
-
 class Transaction(BaseModel):
     id: UUID = Field(
         default_factory=uuid4,
         description="The unique identifier for the transaction",
         alias="_id",
     )
+    user_id: str = Field(..., description="The ID of the user who owns the transaction")
     amount: float = Field(
         ..., description="The amount of money involved in the transaction"
     )
@@ -166,10 +99,3 @@ class Transaction(BaseModel):
     class Config:
         from_attributes = True
         populate_by_name = True
-
-
-class NewUser(BaseModel):
-    phone: str = Field(..., description="The phone number of the user")
-    name: str = Field(..., description="The name of the user")
-    email: str = Field(..., description="The email address of the user")
-    first_account: Account = Field(..., description="The first account of the user")
