@@ -1,15 +1,18 @@
 from core.settings import settings
+from helpers.applog_helper import write_on_file
 
 # Define ANSI escape codes for colors and reset
-RED = '\033[91m'
-GREEN = '\033[92m'
-BLUE = '\033[94m'
-YELLOW = '\033[93m'
-MAGENTA = '\033[95m'
-RESET = '\033[0m'
+RED = "\033[91m"
+GREEN = "\033[92m"
+BLUE = "\033[94m"
+YELLOW = "\033[93m"
+MAGENTA = "\033[95m"
+RESET = "\033[0m"
+
 
 class LoggerHelper:
-    """ Simple logger class for console output with color coding."""
+    """Simple logger class for console output with color coding."""
+
     def __init__(self):
         self.is_debug = settings.debug_mode
         self.is_development = settings.environment == "development"
@@ -46,6 +49,7 @@ class LoggerHelper:
             print(f"{YELLOW}WARNING {correlation_id} {RESET}{message}")
         else:
             print(f"WARNING {correlation_id} {message}")
+            write_on_file(f"WARNING {correlation_id} {message}", correlation_id)
 
     def error(self, message: str, correlation_id: str = "") -> None:
         """
@@ -57,7 +61,8 @@ class LoggerHelper:
             print(f"{RED}ERROR {correlation_id} {RESET}{message}")
         else:
             print(f"ERROR {correlation_id} {message}")
-    
+            write_on_file(f"ERROR {correlation_id} {message}", correlation_id)
+
     def debug(self, message: str, correlation_id: str = "") -> None:
         """
         Logs a debug message if debug mode is enabled.
@@ -69,7 +74,7 @@ class LoggerHelper:
                 print(f"{MAGENTA}DEBUG {correlation_id} {RESET}{message}")
             else:
                 print(f"DEBUG {correlation_id} {message}")
-    
+
     def spacer(self) -> None:
         """
         Prints a spacer line for better readability in logs.
@@ -79,14 +84,16 @@ class LoggerHelper:
         else:
             print("-" * 50)
 
+
 class ProgressBar:
     """
     Simple progress bar for console output.
     """
+
     def __init__(self, total: int):
         self.total = total
         self.current = 0
-        self.is_development = settings.environment == "development"
+        self.is_development = settings.DEVELOPMENT_ENV == "development"
 
     def update(self):
         self.current += 1
@@ -94,21 +101,23 @@ class ProgressBar:
         bar_length = 40
         filled_length = int(bar_length * self.current // self.total)
         if self.is_development:
-            bar = f'{MAGENTA}█{RESET}' * filled_length + '-' * (bar_length - filled_length)
-            print(f'\r{BLUE}PROGRESS{RESET} |{bar}| {percent:.1f}%', end='\r')
-            
+            bar = f"{MAGENTA}█{RESET}" * filled_length + "-" * (
+                bar_length - filled_length
+            )
+            print(f"\r{BLUE}PROGRESS{RESET} |{bar}| {percent:.1f}%", end="\r")
+
         else:
-            bar = '█' * filled_length + '-' * (bar_length - filled_length)
-            print(f'\rPROGRESS |{bar}| {percent:.1f}%', end='\r')
+            bar = "█" * filled_length + "-" * (bar_length - filled_length)
+            print(f"\rPROGRESS |{bar}| {percent:.1f}%", end="\r")
         if self.current == self.total:
             print()  # New line on complete
-    
+
     def reset(self):
         self.current = 0
         if self.is_development:
-            print(f'\r{BLUE}PROGRESS{RESET} |{"-" * 40}| 0.0%{RESET}', end='\r')
+            print(f"\r{BLUE}PROGRESS{RESET} |{'-' * 40}| 0.0%{RESET}", end="\r")
         else:
-            print(f'\rPROGRESS |{"-" * 40}| 0.0%', end='\r')
+            print(f"\rPROGRESS |{'-' * 40}| 0.0%", end="\r")
 
 
 logger = LoggerHelper()
