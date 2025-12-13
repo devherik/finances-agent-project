@@ -1,12 +1,10 @@
-"""Pydantic models for the application."""
-
 from pydantic import BaseModel, Field, field_validator
 from uuid import UUID, uuid4
 
 from .enuns import TransactionType, TransactionStatus
 
 
-class Account(BaseModel):
+class AccountBase(BaseModel):
     id: UUID = Field(
         default_factory=uuid4,
         description="The unique identifier for the account",
@@ -30,7 +28,53 @@ class Account(BaseModel):
         populate_by_name = True
 
 
-class Transaction(BaseModel):
+class AccountCreate(AccountBase):
+    user_id: str = Field(..., description="The ID of the user who owns the account")
+    account_type: str = Field(
+        ..., description="The type of the account (e.g., savings, checking)"
+    )
+    balance: float = Field(..., description="The current balance of the account")
+    currency: str = Field(..., description="The currency of the account")
+
+    @field_validator("balance")
+    def balance_must_be_positive(cls, v):
+        if v <= 0:
+            raise ValueError("Balance must be positive")
+        return v
+
+    @field_validator("currency")
+    def currency_must_be_valid(cls, v):
+        if len(v) != 3:
+            raise ValueError("Currency must be a 3-letter ISO code")
+        return v.upper()
+
+
+class AccountUpdate(AccountBase):
+    user_id: str = Field(..., description="The ID of the user who owns the account")
+    account_type: str = Field(
+        ..., description="The type of the account (e.g., savings, checking)"
+    )
+    balance: float = Field(..., description="The current balance of the account")
+    currency: str = Field(..., description="The currency of the account")
+
+    @field_validator("balance")
+    def balance_must_be_positive(cls, v):
+        if v <= 0:
+            raise ValueError("Balance must be positive")
+        return v
+
+    @field_validator("currency")
+    def currency_must_be_valid(cls, v):
+        if len(v) != 3:
+            raise ValueError("Currency must be a 3-letter ISO code")
+        return v.upper()
+
+
+class AccountDelete(AccountBase):
+    user_id: str = Field(..., description="The ID of the user who owns the account")
+
+
+class TransactionBase(BaseModel):
     id: UUID = Field(
         default_factory=uuid4,
         description="The unique identifier for the transaction",
@@ -99,3 +143,67 @@ class Transaction(BaseModel):
     class Config:
         from_attributes = True
         populate_by_name = True
+
+
+class TransactionCreate(TransactionBase):
+    user_id: str = Field(..., description="The ID of the user who owns the transaction")
+    amount: float = Field(
+        ..., description="The amount of money involved in the transaction"
+    )
+    currency: str = Field(..., description="The currency of the transaction")
+    status: TransactionStatus = Field(
+        ..., description="The current status of the transaction"
+    )
+    type: TransactionType = Field(..., description="The type of the transaction")
+    date: str = Field(..., description="The date when the transaction occurred")
+    created_at: str = Field(
+        ..., description="The timestamp when the transaction was created"
+    )
+    updated_at: str = Field(
+        ..., description="The timestamp when the transaction was last updated"
+    )
+    description: str = Field(..., description="A brief description of the transaction")
+    category_id: str = Field(
+        ...,
+        description="The ID of the category of the transaction (e.g., food, travel)",
+    )
+    merchant: str = Field(
+        ..., description="The merchant associated with the transaction"
+    )
+    account_id: str = Field(
+        ..., description="The account ID associated with the transaction"
+    )
+
+
+class TransactionUpdate(TransactionBase):
+    user_id: str = Field(..., description="The ID of the user who owns the transaction")
+    amount: float = Field(
+        ..., description="The amount of money involved in the transaction"
+    )
+    currency: str = Field(..., description="The currency of the transaction")
+    status: TransactionStatus = Field(
+        ..., description="The current status of the transaction"
+    )
+    type: TransactionType = Field(..., description="The type of the transaction")
+    date: str = Field(..., description="The date when the transaction occurred")
+    created_at: str = Field(
+        ..., description="The timestamp when the transaction was created"
+    )
+    updated_at: str = Field(
+        ..., description="The timestamp when the transaction was last updated"
+    )
+    description: str = Field(..., description="A brief description of the transaction")
+    category_id: str = Field(
+        ...,
+        description="The ID of the category of the transaction (e.g., food, travel)",
+    )
+    merchant: str = Field(
+        ..., description="The merchant associated with the transaction"
+    )
+    account_id: str = Field(
+        ..., description="The account ID associated with the transaction"
+    )
+
+
+class TransactionDelete(TransactionBase):
+    user_id: str = Field(..., description="The ID of the user who owns the transaction")
