@@ -13,6 +13,7 @@ dependencies = [
     "pandas>=2.3.2",
     "passlib[bcrypt]>=1.7.4",
     "pgvector>=0.4.1",
+    "psycopg2-binary>=2.9.11",
     "pydantic>=2.11.9",
     "pymongo[srv]>=4.15.1",
     "pypdf>=6.0.0",
