@@ -1,10 +1,9 @@
-# app/infrastructure/repositories/base_sql_repo.py
-from infrastructure.repositories import UpdateT
-from infrastructure.repositories import CreateT
 from typing import Type, TypeVar, Generic, List, Optional
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
+from domain.repositories import UpdateT, CreateT
 
 # We assume you have SQLAlchemy models defined (Mapping Pydantic to DB Tables)
 # Let's call the generic DB model "ModelType"
