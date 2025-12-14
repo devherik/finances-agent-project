@@ -50,7 +50,6 @@ CREATE TABLE IF NOT EXISTS transactions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     account_id UUID REFERENCES accounts(id) ON DELETE SET NULL,
-    category_id TEXT, -- Placeholder for future Category table relation
     amount NUMERIC(19, 4) NOT NULL,
     currency CHAR(3) NOT NULL,
     description TEXT NOT NULL,

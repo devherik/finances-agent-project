@@ -53,10 +53,6 @@ class TransactionBase(BaseModel):
         ..., description="The timestamp when the transaction was last updated"
     )
     description: str = Field(..., description="A brief description of the transaction")
-    category_id: str = Field(
-        ...,
-        description="The ID of the category of the transaction (e.g., food, travel)",
-    )
     merchant: str = Field(
         ..., description="The merchant associated with the transaction"
     )
