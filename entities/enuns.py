@@ -16,3 +16,9 @@ class TransactionStatus(str, Enum):
     FAILED = "failed"
     CANCELLED = "cancelled"
     REVERSED = "reversed"
+
+
+class AgentRunStatus(str, Enum):
+    STARTED = "STARTED"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
