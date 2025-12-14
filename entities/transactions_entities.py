@@ -5,6 +5,7 @@ from decimal import Decimal
 from .enuns import TransactionType, TransactionStatus
 
 
+# Base Entities
 class AccountBase(BaseModel):
     id: UUID = Field(
         default_factory=uuid4,
@@ -27,52 +28,6 @@ class AccountBase(BaseModel):
     class Config:
         from_attributes = True
         populate_by_name = True
-
-
-class AccountCreate(AccountBase):
-    user_id: str = Field(..., description="The ID of the user who owns the account")
-    account_type: str = Field(
-        ..., description="The type of the account (e.g., savings, checking)"
-    )
-    balance: Decimal = Field(..., description="The current balance of the account")
-    currency: str = Field(..., description="The currency of the account")
-
-    @field_validator("balance")
-    def balance_must_be_positive(cls, v):
-        if v <= 0:
-            raise ValueError("Balance must be positive")
-        return v
-
-    @field_validator("currency")
-    def currency_must_be_valid(cls, v):
-        if len(v) != 3:
-            raise ValueError("Currency must be a 3-letter ISO code")
-        return v.upper()
-
-
-class AccountUpdate(AccountBase):
-    user_id: str = Field(..., description="The ID of the user who owns the account")
-    account_type: str = Field(
-        ..., description="The type of the account (e.g., savings, checking)"
-    )
-    balance: Decimal = Field(..., description="The current balance of the account")
-    currency: str = Field(..., description="The currency of the account")
-
-    @field_validator("balance")
-    def balance_must_be_positive(cls, v):
-        if v <= 0:
-            raise ValueError("Balance must be positive")
-        return v
-
-    @field_validator("currency")
-    def currency_must_be_valid(cls, v):
-        if len(v) != 3:
-            raise ValueError("Currency must be a 3-letter ISO code")
-        return v.upper()
-
-
-class AccountDelete(AccountBase):
-    user_id: str = Field(..., description="The ID of the user who owns the account")
 
 
 class TransactionBase(BaseModel):
@@ -144,6 +99,53 @@ class TransactionBase(BaseModel):
     class Config:
         from_attributes = True
         populate_by_name = True
+
+
+# Data Transfer Objects
+class AccountCreate(AccountBase):
+    user_id: str = Field(..., description="The ID of the user who owns the account")
+    account_type: str = Field(
+        ..., description="The type of the account (e.g., savings, checking)"
+    )
+    balance: Decimal = Field(..., description="The current balance of the account")
+    currency: str = Field(..., description="The currency of the account")
+
+    @field_validator("balance")
+    def balance_must_be_positive(cls, v):
+        if v <= 0:
+            raise ValueError("Balance must be positive")
+        return v
+
+    @field_validator("currency")
+    def currency_must_be_valid(cls, v):
+        if len(v) != 3:
+            raise ValueError("Currency must be a 3-letter ISO code")
+        return v.upper()
+
+
+class AccountUpdate(AccountBase):
+    user_id: str = Field(..., description="The ID of the user who owns the account")
+    account_type: str = Field(
+        ..., description="The type of the account (e.g., savings, checking)"
+    )
+    balance: Decimal = Field(..., description="The current balance of the account")
+    currency: str = Field(..., description="The currency of the account")
+
+    @field_validator("balance")
+    def balance_must_be_positive(cls, v):
+        if v <= 0:
+            raise ValueError("Balance must be positive")
+        return v
+
+    @field_validator("currency")
+    def currency_must_be_valid(cls, v):
+        if len(v) != 3:
+            raise ValueError("Currency must be a 3-letter ISO code")
+        return v.upper()
+
+
+class AccountDelete(AccountBase):
+    user_id: str = Field(..., description="The ID of the user who owns the account")
 
 
 class TransactionCreate(TransactionBase):
