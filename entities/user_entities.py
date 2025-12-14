@@ -77,3 +77,15 @@ class UserUpdate(BaseModel):
     phone: str = Field(..., description="The phone number of the user")
     name: str = Field(..., description="The name of the user")
     email: str = Field(..., description="The email address of the user")
+
+    @field_validator("phone")
+    def phone_must_be_valid(cls, v):
+        if len(v) != 11:
+            raise ValueError("Phone must be 11 digits")
+        return v
+
+    @field_validator("email")
+    def email_must_be_valid(cls, v):
+        if "@" not in v:
+            raise ValueError("Email must be a valid email address")
+        return v

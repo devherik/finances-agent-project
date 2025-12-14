@@ -166,16 +166,55 @@ class TransactionCreate(TransactionBase):
         ..., description="The timestamp when the transaction was last updated"
     )
     description: str = Field(..., description="A brief description of the transaction")
-    category_id: str = Field(
-        ...,
-        description="The ID of the category of the transaction (e.g., food, travel)",
-    )
     merchant: str = Field(
         ..., description="The merchant associated with the transaction"
     )
     account_id: str = Field(
         ..., description="The account ID associated with the transaction"
     )
+
+    @field_validator("amount")
+    def amount_must_be_positive(cls, v):
+        if v <= 0:
+            raise ValueError("Amount must be positive")
+        return v
+
+    @field_validator("currency")
+    def currency_must_be_valid(cls, v):
+        if len(v) != 3:
+            raise ValueError("Currency must be a 3-letter ISO code")
+        return v.upper()
+
+    @field_validator("date", "created_at", "updated_at")
+    def date_must_be_iso_format(cls, v):
+        # Simple check for ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ)
+        if not isinstance(v, str) or len(v) < 10 or v[4] != "-" or v[7] != "-":
+            raise ValueError("Date must be in ISO 8601 format")
+        return v
+
+    @field_validator("status")
+    def status_must_be_valid(cls, v):
+        if v not in TransactionStatus:
+            raise ValueError(f"Status must be one of {list(TransactionStatus)}")
+        return v
+
+    @field_validator("type")
+    def type_must_be_valid(cls, v):
+        if v not in TransactionType:
+            raise ValueError(f"Type must be one of {list(TransactionType)}")
+        return v
+
+    @field_validator("merchant")
+    def merchant_must_be_valid(cls, v):
+        if not v:
+            raise ValueError("Merchant must be a valid merchant")
+        return v
+
+    @field_validator("account_id")
+    def account_id_must_be_valid(cls, v):
+        if not v:
+            raise ValueError("Account ID must be a valid account ID")
+        return v
 
 
 class TransactionUpdate(TransactionBase):
@@ -196,16 +235,55 @@ class TransactionUpdate(TransactionBase):
         ..., description="The timestamp when the transaction was last updated"
     )
     description: str = Field(..., description="A brief description of the transaction")
-    category_id: str = Field(
-        ...,
-        description="The ID of the category of the transaction (e.g., food, travel)",
-    )
     merchant: str = Field(
         ..., description="The merchant associated with the transaction"
     )
     account_id: str = Field(
         ..., description="The account ID associated with the transaction"
     )
+
+    @field_validator("amount")
+    def amount_must_be_positive(cls, v):
+        if v <= 0:
+            raise ValueError("Amount must be positive")
+        return v
+
+    @field_validator("currency")
+    def currency_must_be_valid(cls, v):
+        if len(v) != 3:
+            raise ValueError("Currency must be a 3-letter ISO code")
+        return v.upper()
+
+    @field_validator("date", "created_at", "updated_at")
+    def date_must_be_iso_format(cls, v):
+        # Simple check for ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ)
+        if not isinstance(v, str) or len(v) < 10 or v[4] != "-" or v[7] != "-":
+            raise ValueError("Date must be in ISO 8601 format")
+        return v
+
+    @field_validator("status")
+    def status_must_be_valid(cls, v):
+        if v not in TransactionStatus:
+            raise ValueError(f"Status must be one of {list(TransactionStatus)}")
+        return v
+
+    @field_validator("type")
+    def type_must_be_valid(cls, v):
+        if v not in TransactionType:
+            raise ValueError(f"Type must be one of {list(TransactionType)}")
+        return v
+
+    @field_validator("merchant")
+    def merchant_must_be_valid(cls, v):
+        if not v:
+            raise ValueError("Merchant must be a valid merchant")
+        return v
+
+    @field_validator("account_id")
+    def account_id_must_be_valid(cls, v):
+        if not v:
+            raise ValueError("Account ID must be a valid account ID")
+        return v
 
 
 class TransactionDelete(TransactionBase):
