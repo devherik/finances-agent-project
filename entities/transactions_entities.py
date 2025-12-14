@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, field_validator
 from uuid import UUID, uuid4
+from decimal import Decimal
 
 from .enuns import TransactionType, TransactionStatus
 
@@ -14,7 +15,7 @@ class AccountBase(BaseModel):
     account_type: str = Field(
         ..., description="The type of the account (e.g., savings, checking)"
     )
-    balance: float = Field(..., description="The current balance of the account")
+    balance: Decimal = Field(..., description="The current balance of the account")
     currency: str = Field(..., description="The currency of the account")
     created_at: str = Field(
         ..., description="The timestamp when the account was created"
@@ -33,7 +34,7 @@ class AccountCreate(AccountBase):
     account_type: str = Field(
         ..., description="The type of the account (e.g., savings, checking)"
     )
-    balance: float = Field(..., description="The current balance of the account")
+    balance: Decimal = Field(..., description="The current balance of the account")
     currency: str = Field(..., description="The currency of the account")
 
     @field_validator("balance")
@@ -54,7 +55,7 @@ class AccountUpdate(AccountBase):
     account_type: str = Field(
         ..., description="The type of the account (e.g., savings, checking)"
     )
-    balance: float = Field(..., description="The current balance of the account")
+    balance: Decimal = Field(..., description="The current balance of the account")
     currency: str = Field(..., description="The currency of the account")
 
     @field_validator("balance")
@@ -81,7 +82,7 @@ class TransactionBase(BaseModel):
         alias="_id",
     )
     user_id: str = Field(..., description="The ID of the user who owns the transaction")
-    amount: float = Field(
+    amount: Decimal = Field(
         ..., description="The amount of money involved in the transaction"
     )
     currency: str = Field(..., description="The currency of the transaction")
@@ -147,7 +148,7 @@ class TransactionBase(BaseModel):
 
 class TransactionCreate(TransactionBase):
     user_id: str = Field(..., description="The ID of the user who owns the transaction")
-    amount: float = Field(
+    amount: Decimal = Field(
         ..., description="The amount of money involved in the transaction"
     )
     currency: str = Field(..., description="The currency of the transaction")
@@ -177,7 +178,7 @@ class TransactionCreate(TransactionBase):
 
 class TransactionUpdate(TransactionBase):
     user_id: str = Field(..., description="The ID of the user who owns the transaction")
-    amount: float = Field(
+    amount: Decimal = Field(
         ..., description="The amount of money involved in the transaction"
     )
     currency: str = Field(..., description="The currency of the transaction")
