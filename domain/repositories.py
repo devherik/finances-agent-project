@@ -2,9 +2,9 @@ from abc import ABC, abstractmethod
 from typing import Generic, TypeVar, List, Optional
 from uuid import UUID
 
-from domain.entities.user_entities import User, UserCreate, UserUpdate
-from domain.entities.transaction_entities import (
-    Transaction,
+from domain.entities.user_entities import UserBase, UserCreate, UserUpdate
+from domain.entities.transactions_entities import (
+    TransactionBase,
     TransactionCreate,
     TransactionUpdate,
 )
@@ -54,41 +54,41 @@ class BaseRepository(ABC, Generic[T, CreateT, UpdateT]):
 
 
 # Implementations
-class IUserRepository(BaseRepository[User, UserCreate, UserUpdate]):
+class IUserRepository(BaseRepository[UserBase, UserCreate, UserUpdate]):
     """
     Specific contract for User data access.
     """
 
     @abstractmethod
-    async def get_by_telegram_id(self, telegram_id: str) -> Optional[User]:
+    async def get_by_telegram_id(self, telegram_id: str) -> Optional[UserBase]:
         """
         Crucial for our bot: We need to find users by their Telegram ID, not just UUID.
         """
         pass
 
     @abstractmethod
-    async def get_by_phone(self, phone: str) -> Optional[User]:
+    async def get_by_phone(self, phone: str) -> Optional[UserBase]:
         """
         Crucial for our bot: We need to find users by their phone, not just UUID.
         """
         pass
 
     @abstractmethod
-    async def get_by_email(self, email: str) -> Optional[User]:
+    async def get_by_email(self, email: str) -> Optional[UserBase]:
         """
         Crucial for our bot: We need to find users by their email, not just UUID.
         """
         pass
 
     @abstractmethod
-    async def get_by_cpf(self, cpf: str) -> Optional[User]:
+    async def get_by_cpf(self, cpf: str) -> Optional[UserBase]:
         """
         Crucial for our bot: We need to find users by their CPF, not just UUID.
         """
         pass
 
     @abstractmethod
-    async def get_by_cnpj(self, cnpj: str) -> Optional[User]:
+    async def get_by_cnpj(self, cnpj: str) -> Optional[UserBase]:
         """
         Crucial for our bot: We need to find users by their CNPJ, not just UUID.
         """
@@ -96,7 +96,7 @@ class IUserRepository(BaseRepository[User, UserCreate, UserUpdate]):
 
 
 class ITransactionRepository(
-    BaseRepository[Transaction, TransactionCreate, TransactionUpdate]
+    BaseRepository[TransactionBase, TransactionCreate, TransactionUpdate]
 ):
     """
     Specific contract for Financial Transactions.
@@ -105,11 +105,11 @@ class ITransactionRepository(
     @abstractmethod
     async def get_by_user(
         self, user_id: UUID, skip: int = 0, limit: int = 100
-    ) -> List[Transaction]:
+    ) -> List[TransactionBase]:
         pass
 
     @abstractmethod
-    async def get_pending_incomes(self, user_id: UUID) -> List[Transaction]:
+    async def get_pending_incomes(self, user_id: UUID) -> List[TransactionBase]:
         """Custom query for dashboarding."""
         pass
 

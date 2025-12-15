@@ -46,6 +46,10 @@ class Settings(BaseSettings):
         return os.getenv("IS_DEV", "True").lower() in ("true", "1", "yes")
 
     @property
+    def get_postgres_url(self) -> str:
+        return f"postgresql+psycopg2://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+
+    @property
     def get_supabase_connection_string(self) -> str:
         return f"postgresql://postgres:{self.postgres_password}@db.pzryulgwpfdxysottnqr.supabase.co:5432/postgres"
 
