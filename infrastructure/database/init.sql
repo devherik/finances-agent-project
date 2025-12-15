@@ -119,7 +119,6 @@ SELECT
     t.date,
     t.type,
     t.status,
-    t.category_id,
     u.id AS user_id,
     u.name AS user_name,
     a.id AS account_id,
