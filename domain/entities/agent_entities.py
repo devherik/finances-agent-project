@@ -27,6 +27,26 @@ class AgentRunBase(BaseModel):
     )
 
 
+class AgentRunMemoryBase(BaseModel):
+    """
+    Base attributes for an AI execution.
+    """
+
+    agent_name: str = Field(
+        ..., description="The identifier of the agent (e.g., 'FinancialAdvisorBot')"
+    )
+    model_name: str = Field(
+        ..., description="The specific LLM used (e.g., 'gpt-4o', 'claude-3-5-sonnet')"
+    )
+    user_id: UUID = Field(..., description="The user who triggered this run")
+
+    # We use Dict to store complex contexts/prompts.
+    # In a database like Postgres, this maps perfectly to JSONB.
+    input_context: Dict[str, Any] = Field(
+        default_factory=dict, description="The data fed into the agent"
+    )
+
+
 # Data Transfer Objects
 class AgentRunCreate(AgentRunBase):
     """
@@ -77,3 +97,11 @@ class AgentRun(AgentRunBase):
     @property
     def total_tokens(self) -> int:
         return self.prompt_tokens + self.completion_tokens
+
+
+class AgentRunMemoryCreate(AgentRunMemoryBase):
+    """
+    REQUEST: Created when the agent starts working.
+    """
+
+    pass

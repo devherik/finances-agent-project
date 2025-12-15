@@ -2,13 +2,18 @@ from abc import ABC, abstractmethod
 from typing import Generic, TypeVar, List, Optional
 from uuid import UUID
 
-from entities.user_entities import User, UserCreate, UserUpdate
-from entities.transaction_entities import (
+from domain.entities.user_entities import User, UserCreate, UserUpdate
+from domain.entities.transaction_entities import (
     Transaction,
     TransactionCreate,
     TransactionUpdate,
 )
-from entities.agent_entities import AgentRun, AgentRunCreate, AgentRunUpdate
+from domain.entities.agent_entities import (
+    AgentRunBase,
+    AgentRunCreate,
+    AgentRunUpdate,
+    AgentRunMemoryBase,
+)
 
 # We define a generic type T that must be a Pydantic Model (our Entities)
 T = TypeVar("T")
@@ -109,12 +114,30 @@ class ITransactionRepository(
         pass
 
 
-class IAgentRunRepository(BaseRepository[AgentRun, AgentRunCreate, AgentRunUpdate]):
+class IAgentRunRepository(BaseRepository[AgentRunBase, AgentRunCreate, AgentRunUpdate]):
     """
     Specific contract for AI Analytics.
     """
 
     @abstractmethod
-    async def get_runs_by_session(self, session_id: str) -> List[AgentRun]:
+    async def get_runs_by_session(self, session_id: str) -> List[AgentRunBase]:
         """Useful if we want to retrieve chat history context."""
+        pass
+
+
+class IAgentMemoryRepository(ABC):
+    """
+    Specific contract for AI Analytics Memory into a Vector Database.
+    """
+
+    @abstractmethod
+    async def save_interaction(
+        self, user_id: UUID, prompt: str, response: str, embedding: List[float]
+    ) -> None:
+        pass
+
+    @abstractmethod
+    async def search_similar_interactions(
+        self, user_id: UUID, query: str, k: int = 5
+    ) -> List[AgentRunMemoryBase]:
         pass
