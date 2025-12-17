@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from uuid import UUID, uuid4
+from datetime import datetime
 
 
 # Base Entity
@@ -18,8 +19,10 @@ class UserBase(BaseModel):
     )
     cpf: Optional[str] = Field(None, description="The CPF of the user")
     cnpj: Optional[str] = Field(None, description="The CNPJ of the user")
-    created_at: str = Field(..., description="The timestamp when the user was created")
-    updated_at: str = Field(
+    created_at: datetime = Field(
+        ..., description="The timestamp when the user was created"
+    )
+    updated_at: datetime = Field(
         ..., description="The timestamp when the user was last updated"
     )
 

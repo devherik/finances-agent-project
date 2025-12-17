@@ -1,33 +1,60 @@
 import asyncio
-from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 from core.settings import settings
 from domain.repositories import IUserRepository
 from domain.entities.user_entities import UserBase, UserCreate
 from infrastructure.repositories.user_repo import UserRepository
-
-
-async def get_db():
-    engine = create_engine(settings.get_postgres_url)
-    return engine
+from infrastructure.database.models import Base, UserModel
 
 
 async def main():
-    db = await get_db()
-    user_repository: IUserRepository = UserRepository(db, UserBase)
-    await user_repository.create(
-        UserCreate(
-            name="Herik Rezende",
-            email="herikrezende@gmail.com",
-            cpf="12345678901",
-            cnpj="12345678901234",
-            phone="12345678901",
-        )
-    )
+    try:
+        # 1. Create Async Engine
+        # We need an async driver (asyncpg) which we added to settings
+        engine = create_async_engine(settings.get_async_postgres_url)
 
-    await user_repository.get("1")
+        # 2. Create Tables (if not exist)
+        # In production, use Alembic. For playground, this is fine.
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
 
-    await user_repository.delete("1")
+        # 3. Create Session Factory
+        AsyncSessionLocal = async_sessionmaker(bind=engine, expire_on_commit=False)
+
+        # 4. Use Session
+        async with AsyncSessionLocal() as session:
+            # Instantiate Repository with ORM Model AND Domain Model
+            user_repository: IUserRepository = UserRepository(
+                UserModel, UserBase, session
+            )
+
+            print("Creating user...")
+            new_user = await user_repository.create(
+                UserCreate(
+                    name="Herik Rezende",
+                    email="herikrezende@gmail.com",
+                    cpf="12345678901",
+                    cnpj="12345678901234",
+                    phone="12345678901",
+                )
+            )
+            print(f"Created User: {new_user}")
+
+            print("Fetching user...")
+            fetched_user = await user_repository.get(new_user.id)
+            print(f"Fetched User: {fetched_user}")
+
+            await user_repository.delete(new_user.id)
+            print("User deleted")
+
+        await engine.dispose()
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        import traceback
+
+        traceback.print_exc()
 
 
 if __name__ == "__main__":

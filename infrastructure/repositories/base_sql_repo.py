@@ -3,53 +3,69 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from domain.repositories import UpdateT, CreateT
+# ORM Model (SQLAlchemy)
+ORMModelType = TypeVar("ORMModelType")
+# Domain Entity (Pydantic)
+DomainModelType = TypeVar("DomainModelType")
+# Schemas
+CreateSchemaType = TypeVar("CreateSchemaType")
+UpdateSchemaType = TypeVar("UpdateSchemaType")
 
-# We assume you have SQLAlchemy models defined (Mapping Pydantic to DB Tables)
-# Let's call the generic DB model "ModelType"
-ModelType = TypeVar("ModelType")
 
-
-class SQLAlchemyRepository(Generic[ModelType, CreateT, UpdateT]):
+class SQLAlchemyRepository(
+    Generic[ORMModelType, DomainModelType, CreateSchemaType, UpdateSchemaType]
+):
     """
     The 'Real World' implementation.
-    This class depends on SQLAlchemy logic.
+    This class depends on SQLAlchemy logic and maps between ORM models and Domain Entities.
     """
 
-    def __init__(self, model: Type[ModelType], db: AsyncSession):
+    def __init__(
+        self,
+        model: Type[ORMModelType],
+        domain_model: Type[DomainModelType],
+        db: AsyncSession,
+    ):
         self.model = model
+        self.domain_model = domain_model
         self.db = db
 
-    async def create(self, obj_in: CreateT) -> ModelType:
+    async def create(self, obj_in: CreateSchemaType) -> DomainModelType:
         # Convert Pydantic model to SQLAlchemy Dict
         obj_in_data = obj_in.model_dump()
         db_obj = self.model(**obj_in_data)
         self.db.add(db_obj)
         await self.db.commit()
         await self.db.refresh(db_obj)
-        return db_obj
+        return self.domain_model.model_validate(db_obj)
 
-    async def get(self, id: UUID) -> Optional[ModelType]:
+    async def get(self, id: UUID) -> Optional[DomainModelType]:
         query = select(self.model).where(self.model.id == id)
         result = await self.db.execute(query)
-        return result.scalar_one_or_none()
+        db_obj = result.scalar_one_or_none()
+        if db_obj:
+            return self.domain_model.model_validate(db_obj)
+        return None
 
-    async def get_all(self, skip: int = 0, limit: int = 100) -> List[ModelType]:
+    async def get_all(self, skip: int = 0, limit: int = 100) -> List[DomainModelType]:
         query = select(self.model).offset(skip).limit(limit)
         result = await self.db.execute(query)
-        return result.scalars().all()
+        db_objs = result.scalars().all()
+        return [self.domain_model.model_validate(obj) for obj in db_objs]
 
-    async def update(self, id: UUID, obj_in: UpdateT) -> Optional[ModelType]:
+    async def update(
+        self, id: UUID, obj_in: UpdateSchemaType
+    ) -> Optional[DomainModelType]:
         query = select(self.model).where(self.model.id == id)
         result = await self.db.execute(query)
         db_obj = result.scalar_one_or_none()
         if not db_obj:
             return None
-        for field, value in obj_in.model_dump().items():
+        for field, value in obj_in.model_dump(exclude_unset=True).items():
             setattr(db_obj, field, value)
         await self.db.commit()
         await self.db.refresh(db_obj)
-        return db_obj
+        return self.domain_model.model_validate(db_obj)
 
     async def delete(self, id: UUID) -> bool:
         query = select(self.model).where(self.model.id == id)
