@@ -6,6 +6,8 @@ from domain.repositories import IUserRepository
 from domain.entities.user_entities import UserBase, UserCreate
 from infrastructure.repositories.user_repo import UserRepository
 from infrastructure.database.models import Base, UserModel
+from helpers.auth_helper import get_password_hash, verify_password
+from helpers.loging_helper import logger
 
 
 async def main():
@@ -28,30 +30,37 @@ async def main():
             user_repository: IUserRepository = UserRepository(
                 UserModel, UserBase, session
             )
+            
+            logger.info("Hashing and verifying password...")
+            password = "strongpassword123"
+            hashed_password = get_password_hash(password)
+            assert verify_password(password, hashed_password)
+            logger.success("Password hashed and verified successfully.")
 
-            print("Creating user...")
+            logger.info("Creating user...")
             new_user = await user_repository.create(
                 UserCreate(
                     name="Herik Rezende",
                     email="herikrezende@gmail.com",
+                    password=hashed_password,
                     cpf="12345678901",
                     cnpj="12345678901234",
                     phone="12345678901",
                 )
             )
-            print(f"Created User: {new_user}")
+            logger.info(f"Created User: {new_user}")
 
-            print("Fetching user...")
+            logger.info("Fetching user...")
             fetched_user = await user_repository.get(new_user.id)
-            print(f"Fetched User: {fetched_user}")
-
+            logger.info(f"Fetched User: {fetched_user}")
+            
             await user_repository.delete(new_user.id)
-            print("User deleted")
+            logger.info("User deleted")
 
         await engine.dispose()
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")
         import traceback
 
         traceback.print_exc()

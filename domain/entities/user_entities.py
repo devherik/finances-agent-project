@@ -14,6 +14,7 @@ class UserBase(BaseModel):
     phone: str = Field(..., description="The phone number of the user")
     name: str = Field(..., description="The name of the user")
     email: str = Field(..., description="The email address of the user")
+    password: str = Field(..., description="The password of the user")
     complete: bool = Field(
         default=False, description="Indicates if the user profile is complete"
     )
@@ -42,6 +43,7 @@ class UserCreate(BaseModel):
     phone: str = Field(..., description="The phone number of the user")
     name: str = Field(..., description="The name of the user")
     email: str = Field(..., description="The email address of the user")
+    password: str = Field(..., description="The password of the user")
     cpf: Optional[str] = Field(None, description="The CPF of the user")
     cnpj: Optional[str] = Field(None, description="The CNPJ of the user")
 
@@ -75,11 +77,18 @@ class UserCreate(BaseModel):
             raise ValueError("The user must have a valid CPF or CNPJ")
         return v
 
+    @field_validator("password")
+    def password_must_be_strong(cls, v):
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters long")
+        return v
+
 
 class UserUpdate(BaseModel):
     phone: str = Field(..., description="The phone number of the user")
     name: str = Field(..., description="The name of the user")
     email: str = Field(..., description="The email address of the user")
+    password: str = Field(..., description="The password of the user")
 
     @field_validator("phone")
     def phone_must_be_valid(cls, v):
@@ -91,4 +100,10 @@ class UserUpdate(BaseModel):
     def email_must_be_valid(cls, v):
         if "@" not in v:
             raise ValueError("Email must be a valid email address")
+        return v
+    
+    @field_validator("password")
+    def password_must_be_strong(cls, v):
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters long")
         return v

@@ -16,6 +16,7 @@ class UserModel(Base):
     phone = Column(String, nullable=False, unique=True)
     name = Column(String, nullable=False)
     email = Column(String, nullable=False, unique=True)
+    password = Column(String, nullable=False)
     complete = Column(Boolean, default=False)
     cpf = Column(String, nullable=True, unique=True)
     cnpj = Column(String, nullable=True, unique=True)
