@@ -48,15 +48,34 @@ async def main():
                     phone="12345678901",
                 )
             )
-            logger.info(f"Created User: {new_user}")
+            logger.success(f"Created User: {new_user}")
+            logger.spacer()
 
             logger.info("Fetching user...")
             fetched_user = await user_repository.get(new_user.id)
-            logger.info(f"Fetched User: {fetched_user}")
+            logger.success(f"Fetched User: {fetched_user}")
+            logger.spacer()
             
+            logger.info("Updating user...")
+            updated_user = await user_repository.update(
+                new_user.id,
+                UserCreate(
+                    name="Herik R. Updated",
+                    email="herikupdated@gmail.com",
+                    password=hashed_password,
+                    cpf="12345678901",
+                    cnpj="12345678901234",
+                    phone="12345678901",
+                )
+            )
+            logger.success(f"Updated User: {updated_user}")
+            logger.spacer()
+            
+            logger.info("Deleting user...")
             await user_repository.delete(new_user.id)
-            logger.info("User deleted")
-
+            logger.success("User deleted")
+            logger.spacer()
+            
         await engine.dispose()
 
     except Exception as e:
