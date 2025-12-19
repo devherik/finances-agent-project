@@ -85,10 +85,12 @@ class UserCreate(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    phone: str = Field(..., description="The phone number of the user")
-    name: str = Field(..., description="The name of the user")
-    email: str = Field(..., description="The email address of the user")
-    password: str = Field(..., description="The password of the user")
+    phone: Optional[str] = Field(..., description="The phone number of the user")
+    name: Optional[str] = Field(..., description="The name of the user")
+    email: Optional[str] = Field(..., description="The email address of the user")
+    password: Optional[str] = Field(..., description="The password of the user")
+    cpf: Optional[str] = Field(None, description="The CPF of the user")
+    cnpj: Optional[str] = Field(None, description="The CNPJ of the user")
 
     @field_validator("phone")
     def phone_must_be_valid(cls, v):
@@ -106,4 +108,16 @@ class UserUpdate(BaseModel):
     def password_must_be_strong(cls, v):
         if len(v) < 8:
             raise ValueError("Password must be at least 8 characters long")
+        return v
+    
+    @field_validator("cpf")
+    def cpf_must_be_valid(cls, v):
+        if len(v) != 11:
+            raise ValueError("CPF must be 11 digits")
+        return v
+    
+    @field_validator("cnpj")
+    def cnpj_must_be_valid(cls, v):
+        if len(v) != 14:
+            raise ValueError("CNPJ must be 14 digits")
         return v

@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 from core.settings import settings
 from domain.repositories import IUserRepository
-from domain.entities.user_entities import UserBase, UserCreate
+from domain.entities.user_entities import UserBase, UserCreate, UserUpdate
 from infrastructure.repositories.user_repo import UserRepository
 from infrastructure.database.models import Base, UserModel
 from helpers.auth_helper import get_password_hash, verify_password
@@ -59,16 +59,19 @@ async def main():
             logger.info("Updating user...")
             updated_user = await user_repository.update(
                 new_user.id,
-                UserCreate(
+                UserUpdate(
                     name="Herik R. Updated",
                     email="herikupdated@gmail.com",
-                    password=hashed_password,
-                    cpf="12345678901",
                     cnpj="12345678901234",
                     phone="12345678901",
                 )
             )
             logger.success(f"Updated User: {updated_user}")
+            logger.spacer()
+            
+            logger.info("Verifying updated password...")
+            assert verify_password(password, updated_user.password)
+            logger.success("Updated password verified successfully.")
             logger.spacer()
             
             logger.info("Deleting user...")
