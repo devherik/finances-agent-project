@@ -11,7 +11,21 @@ RESET = "\033[0m"
 
 
 class LoggerHelper:
-    """Simple logger class for console output with color coding."""
+    """
+    Simple logger class for console output with color coding.
+
+    Attributes:
+        is_debug (bool): Whether debug mode is enabled.
+        is_development (bool): Whether the environment is development.
+
+    Methods:
+        info(message: str, correlation_id: str = "") -> None: Logs an informational message.
+        success(message: str, correlation_id: str = "") -> None: Logs a success message.
+        warning(message: str, correlation_id: str = "") -> None: Logs a warning message.
+        error(message: str, correlation_id: str = "") -> None: Logs an error message.
+        debug(message: str, correlation_id: str = "") -> None: Logs a debug message if debug mode is enabled.
+        spacer() -> None: Prints a spacer line for better readability in logs.
+    """
 
     def __init__(self):
         self.is_debug = settings.debug_mode
