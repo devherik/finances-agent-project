@@ -1,10 +1,10 @@
+import uuid
+from sqlalchemy.sql.sqltypes import Numeric
 from sqlalchemy.dialects.postgresql.json import JSONB
-from decimal import Decimal
 from sqlalchemy import Column, String, Boolean, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.sql import func
-import uuid
 
 
 class Base(DeclarativeBase):
@@ -35,7 +35,7 @@ class AccountModel(Base):
     user_id = Column(UUID(as_uuid=True), nullable=False)
     name = Column(String, nullable=False)
     account_type = Column(String, nullable=False)
-    balance = Column(Decimal, nullable=False)
+    balance = Column(Numeric, nullable=False)
     currency = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
@@ -49,7 +49,7 @@ class TransactionModel(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), nullable=False)
     account_id = Column(UUID(as_uuid=True), nullable=False)
-    amount = Column(Decimal, nullable=False)
+    amount = Column(Numeric, nullable=False)
     currency = Column(String, nullable=False)
     status = Column(String, nullable=False)
     type = Column(String, nullable=False)
