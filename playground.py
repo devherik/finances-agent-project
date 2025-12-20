@@ -1,8 +1,7 @@
 from core.deps import get_postgres_async_session
 import asyncio
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
-from core.settings import settings
+
 from domain.repositories import IUserRepository
 from domain.entities.user_entities import UserBase, UserCreate, UserUpdate
 from infrastructure.repositories.user_repo import UserRepository
