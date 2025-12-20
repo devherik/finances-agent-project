@@ -1,11 +1,11 @@
-import asyncio
-import traceback
-
 from domain.repositories import IUserRepository
-from domain.entities.user_entities import UserCreate, UserUpdate
+import traceback
+import asyncio
+
+from helpers.loging_helper import logger
 from infrastructure.database.models import Base
 from helpers.auth_helper import get_password_hash, verify_password
-from helpers.loging_helper import logger
+from domain.entities.user_entities import UserCreate, UserUpdate
 from core.deps import (
     get_postgres_engine,
     get_postgres_async_session,
@@ -29,7 +29,6 @@ async def main():
 
         # 4. Use Session
         async with AsyncSessionLocal() as session:
-            # Instantiate Repository with ORM Model AND Domain Model
             user_repository: IUserRepository = get_user_repository(session)
 
             logger.info("Hashing and verifying password...")
@@ -41,8 +40,8 @@ async def main():
             logger.info("Creating user...")
             new_user = await user_repository.create(
                 UserCreate(
-                    name="Herik Rezende",
-                    email="herikrezende@gmail.com",
+                    name="New User",
+                    email="newuser@mail.com",
                     password=hashed_password,
                     cpf="12345678901",
                     cnpj="12345678901234",
@@ -61,8 +60,8 @@ async def main():
             updated_user = await user_repository.update(
                 new_user.id,
                 UserUpdate(
-                    name="Herik R. Updated",
-                    email="herikupdated@gmail.com",
+                    name="Updated User",
+                    email="updateduser@mail.com",
                     cnpj="12345678901234",
                     phone="12345678901",
                 ),
@@ -80,10 +79,8 @@ async def main():
             logger.success("User deleted")
             logger.spacer()
 
-        await engine.dispose()
-
     except Exception as e:
-        logger.error(f"An error occurred: {e}")
+        logger.error(f"Failed to connect: {e}")
         traceback.print_exc()
 
 
