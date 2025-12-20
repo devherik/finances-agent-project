@@ -7,7 +7,6 @@ ENV_PATH = os.path.join(BASE_DIR, ".env")
 
 if os.path.exists(ENV_PATH):
     load_dotenv(ENV_PATH)
-    print(f".env file loaded from {ENV_PATH}")
 else:
     print(f".env file not found at {ENV_PATH}, proceeding without it.")
 
