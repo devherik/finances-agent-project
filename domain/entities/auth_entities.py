@@ -36,3 +36,9 @@ class TaskStatus(BaseModel):
     task_id: str = Field(..., description="The task ID of the response")
     status: str = Field(..., description="The status of the response")
     result: Optional[Any] = Field(None, description="The result of the response")
+
+
+class Token(BaseModel):
+    access_token: str = Field(..., description="The access token")
+    token_type: str = Field(..., description="The token type")
+    data: Optional[Dict[str, Any]] = Field(None, description="The data of the response")
