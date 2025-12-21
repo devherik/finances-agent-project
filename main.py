@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.concurrency import asynccontextmanager
 
 from api.routers.auth_routers import auth_r

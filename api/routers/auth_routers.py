@@ -12,10 +12,10 @@ from domain.repositories import IUserRepository
 from helpers.auth_helper import create_access_token
 from helpers.loging_helper import logger
 
-auth_r = APIRouter(prefix="/auth", tags=["Authentication"])
+auth_r = APIRouter(prefix="/o", tags=["Authentication"])
 
 
-@auth_r.post("/login", response_model=Token)
+@auth_r.post("/token", response_model=Token)
 async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     user_repo: IUserRepository = Depends(get_user_repository),
