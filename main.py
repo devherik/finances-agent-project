@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.concurrency import asynccontextmanager
 
-from api.routers.auth_routers import auth_r
+from api.routers.auth_routers import auth_rt
 
 from helpers.loging_helper import logger
 
@@ -15,7 +15,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-app.include_router(auth_r)
+app.include_router(auth_rt)
 
 
 @app.get("/")
