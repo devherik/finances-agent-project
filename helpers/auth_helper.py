@@ -1,12 +1,10 @@
+from typing import Mapping
 from datetime import datetime, timedelta
-from typing import Annotated, Optional
-from fastapi.params import Depends
-from fastapi import HTTPException
+from typing import Optional, Any
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
 
-from domain.entities.user_entities import UserBase
 from core.settings import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -40,44 +38,16 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 
-def validate_token(token: str) -> Optional[dict]:
+def validate_token(token: str) -> Optional[Mapping[str, Any]]:
     try:
         payload = jwt.decode(
             token, settings.secret_key, algorithms=[settings.algorithm]
         )
+        if payload is None:
+            return None
         username = payload.get("sub")
         if username is None:
             return None
-        print(username)
         return payload
     except JWTError:
         return None
-
-
-def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]) -> UserBase:
-    """
-    Extract and validate user from JWT token.
-    Returns a User object if authentication is successful.
-    Raises HTTPException if authentication fails.
-    """
-    credentials_exception = HTTPException(
-        status_code=401,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-    payload = validate_token(token)
-    if payload is None:
-        raise credentials_exception
-
-    username = payload.get("sub")
-    if username is None:
-        raise credentials_exception
-
-    # Create a minimal User object with the username from the token
-    # In a real application, you might want to fetch full user details from the database
-    user = UserBase(
-        username=username,
-    )
-
-    return user

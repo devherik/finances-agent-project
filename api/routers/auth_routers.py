@@ -1,16 +1,15 @@
-from core.deps import get_postgres_async_session
-from google.genai.live import AsyncSession
+from core.deps import AuthUser
+
 from fastapi import APIRouter, HTTPException, Depends
+from domain.repositories import IUserRepository
 from fastapi.security import OAuth2PasswordRequestForm
 from typing import Annotated
 
-from core.deps import get_current_user
 from core.deps import oauth2_scheme
 from core.deps import pwd_context
 from core.deps import get_user_repository
 
 from domain.entities.auth_entities import Token
-from domain.repositories import IUserRepository
 from helpers.auth_helper import create_access_token
 from helpers.loging_helper import logger
 
@@ -20,13 +19,15 @@ auth_rt = APIRouter(prefix="/o", tags=["Authentication"])
 @auth_rt.post("/token", response_model=Token)
 async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    AsyncSession: Annotated[AsyncSession, Depends(get_postgres_async_session)],
+    user_repo: Annotated[IUserRepository, Depends(get_user_repository)],
 ):
     logger.debug(f"Login attempt for user: {form_data.username}")
 
-    async with AsyncSession() as session:
-        user_repo = get_user_repository(session)
+    try:
         user = await user_repo.get_by_email(form_data.username)
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
     if user is None:
         logger.debug("User not found")
@@ -42,9 +43,11 @@ async def login(
 @auth_rt.get("/me", response_model=Token)
 async def me(
     token: Annotated[str, Depends(oauth2_scheme)],
-    user_repo: IUserRepository = Depends(get_user_repository),
+    user: AuthUser,
 ):
-    return await get_current_user(token, user_repo)
+    return Token(
+        access_token=token, token_type="bearer", data={"user": user.model_dump()}
+    )
 
 
 @auth_rt.post("/register", response_model=Token)
