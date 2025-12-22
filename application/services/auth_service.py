@@ -40,6 +40,14 @@ async def get_login(
     return Token(access_token=access_token, token_type="bearer", data={})
 
 
+async def get_logout(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    user_repo: IUserRepository = Depends(get_user_repository),
+):
+    logger.debug(f"Logout attempt for user: {token}")
+    return Token(access_token="", token_type="bearer", data={})
+
+
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     user_repo: IUserRepository = Depends(get_user_repository),

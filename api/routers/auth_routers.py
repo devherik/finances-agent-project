@@ -1,3 +1,4 @@
+from application.services.auth_service import get_logout
 from core.deps import AuthUser
 
 from fastapi import APIRouter, Depends
@@ -20,6 +21,14 @@ async def login(
     user_repo: Annotated[IUserRepository, Depends(get_user_repository)],
 ):
     return await get_login(form_data, user_repo)
+
+
+@auth_rt.post("/logout", response_model=Token)
+async def logout(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    user_repo: Annotated[IUserRepository, Depends(get_user_repository)],
+):
+    return await get_logout(token, user_repo)
 
 
 @auth_rt.get("/me", response_model=Token)
