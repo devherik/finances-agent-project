@@ -32,7 +32,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
         )
 
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(
+    encoded_jwt: str = jwt.encode(
         to_encode, settings.secret_key, algorithm=settings.algorithm
     )
     return encoded_jwt
@@ -40,12 +40,12 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 def validate_token(token: str) -> Optional[Mapping[str, Any]]:
     try:
-        payload = jwt.decode(
+        payload: Mapping[str, Any] = jwt.decode(
             token, settings.secret_key, algorithms=[settings.algorithm]
         )
         if payload is None:
             return None
-        username = payload.get("sub")
+        username: str | None = payload.get("sub")
         if username is None:
             return None
         return payload
