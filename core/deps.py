@@ -1,5 +1,3 @@
-from jose.exceptions import JWTError
-from helpers.auth_helper import validate_token
 from fastapi import Depends
 from fastapi.exceptions import HTTPException
 from fastapi.security import OAuth2PasswordBearer
@@ -8,13 +6,17 @@ from sqlalchemy.ext.asyncio.engine import AsyncEngine
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
+from jose.exceptions import JWTError
 from typing import Annotated, AsyncGenerator
 from passlib.context import CryptContext
 
 from domain.entities.user_entities import UserBase
 from domain.repositories import IUserRepository
+
 from infrastructure.database.models import UserModel
 from infrastructure.repositories.user_repo import UserRepository
+
+from helpers.auth_helper import validate_token
 from helpers.loging_helper import logger
 
 from core.settings import settings
@@ -52,6 +54,9 @@ def get_user_repository(
     Returns a new instance of the UserRepository injection.
     """
     return UserRepository(UserModel, UserBase, session)
+
+
+# TODO: Create here the dependencies for the other repositories
 
 
 async def get_current_user(
