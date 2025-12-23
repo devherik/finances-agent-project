@@ -1,9 +1,12 @@
+from domain.entities.user_entities import UserCreate
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from fastapi.exceptions import HTTPException
 
 from jose.exceptions import JWTError
 
-from domain.entities.user_entities import UserBase
+from uuid import UUID
+
+from domain.entities.user_entities import UserBase, UserUpdate
 from domain.entities.auth_entities import Token
 from domain.repositories import IUserRepository
 
@@ -39,6 +42,38 @@ async def get_logout(
     user_repo: IUserRepository,
 ):
     logger.debug(f"Logout attempt for user: {token}")
+    return Token(access_token="", token_type="bearer", data={})
+
+
+async def get_hydrate_user(
+    token: str,
+    user_repo: IUserRepository,
+):
+    logger.debug(f"Hydrate attempt for user: {token}")
+    return Token(access_token="", token_type="bearer", data={})
+
+
+async def get_register_user(
+    user: UserCreate,
+    user_repo: IUserRepository,
+):
+    logger.debug(f"Register attempt for user: {user.email}")
+    return Token(access_token="", token_type="bearer", data={})
+
+
+async def get_update_user(
+    user: UserUpdate,
+    user_repo: IUserRepository,
+):
+    logger.debug(f"Update attempt for user: {user.email}")
+    return Token(access_token="", token_type="bearer", data={})
+
+
+async def get_delete_user(
+    user_id: UUID,
+    user_repo: IUserRepository,
+):
+    logger.debug(f"Delete attempt for user: {user_id}")
     return Token(access_token="", token_type="bearer", data={})
 
 
