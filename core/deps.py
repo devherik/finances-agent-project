@@ -1,10 +1,10 @@
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.exceptions import HTTPException
 from fastapi.security import OAuth2PasswordBearer
 
 from sqlalchemy.ext.asyncio.engine import AsyncEngine
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from jose.exceptions import JWTError
 from typing import Annotated, AsyncGenerator
@@ -19,20 +19,18 @@ from infrastructure.repositories.user_repo import UserRepository
 from helpers.auth_helper import validate_token
 from helpers.loging_helper import logger
 
-from core.settings import settings
-
 # Dependencies
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/o/token")
 
 
-def get_postgres_engine() -> AsyncEngine:
+def get_postgres_engine(request: Request) -> AsyncEngine:
     """
-    Returns a new postgres engine for the database.
-    Always call 'dispose' on the engine when it is no longer needed.
+    Returns the singleton postgres engine from app.state.
+    The engine is created during application startup and disposed on shutdown.
     """
-    return create_async_engine(settings.get_async_postgres_url)
+    return request.app.state.engine
 
 
 async def get_postgres_async_session(
@@ -40,7 +38,10 @@ async def get_postgres_async_session(
 ) -> AsyncGenerator[AsyncSession, None]:
     """
     Returns a new postgres async session for the database.
-    Use with 'async with' statement.
+    Use with 'async with' statement. When execution returns here (after yield), the session is automatically:
+    - Committed (if no exceptions)
+    - Rolled back (if exceptions occurred)
+    - Closed (always)
     """
     async_session = async_sessionmaker(bind=engine, expire_on_commit=False)
     async with async_session() as session:
