@@ -1,25 +1,21 @@
-from core.deps import pwd_context
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
-from helpers.auth_helper import create_access_token
-from jose.exceptions import JWTError
-from helpers.auth_helper import validate_token
-from fastapi import Depends
 from fastapi.exceptions import HTTPException
 
-from typing import Annotated
+from jose.exceptions import JWTError
+
+from core.deps import pwd_context
 
 from domain.entities.user_entities import UserBase
 from domain.entities.auth_entities import Token
 from domain.repositories import IUserRepository
 
+from helpers.auth_helper import create_access_token, validate_token
 from helpers.loging_helper import logger
-
-from core.deps import get_user_repository, oauth2_scheme
 
 
 async def get_login(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    user_repo: Annotated[IUserRepository, Depends(get_user_repository)],
+    form_data: OAuth2PasswordRequestForm,
+    user_repo: IUserRepository,
 ):
     logger.debug(f"Login attempt for user: {form_data.username}")
 
@@ -41,16 +37,16 @@ async def get_login(
 
 
 async def get_logout(
-    token: Annotated[str, Depends(oauth2_scheme)],
-    user_repo: IUserRepository = Depends(get_user_repository),
+    token: str,
+    user_repo: IUserRepository,
 ):
     logger.debug(f"Logout attempt for user: {token}")
     return Token(access_token="", token_type="bearer", data={})
 
 
 async def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)],
-    user_repo: IUserRepository = Depends(get_user_repository),
+    token: str,
+    user_repo: IUserRepository,
 ) -> UserBase:
     """
     Returns the current user.
