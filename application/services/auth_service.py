@@ -3,13 +3,11 @@ from fastapi.exceptions import HTTPException
 
 from jose.exceptions import JWTError
 
-from core.deps import pwd_context
-
 from domain.entities.user_entities import UserBase
 from domain.entities.auth_entities import Token
 from domain.repositories import IUserRepository
 
-from helpers.auth_helper import create_access_token, validate_token
+from helpers.auth_helper import create_access_token, validate_token, verify_password
 from helpers.loging_helper import logger
 
 
@@ -28,7 +26,7 @@ async def get_login(
     if user is None:
         logger.debug("User not found")
         raise HTTPException(status_code=400, detail="User not found")
-    if not pwd_context.verify(form_data.password, user.password):
+    if not verify_password(form_data.password, user.password):
         logger.debug("Incorrect password")
         raise HTTPException(status_code=400, detail="Incorrect password")
     access_token = create_access_token(data={"sub": user.email})
