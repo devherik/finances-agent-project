@@ -80,18 +80,43 @@ CREATE TABLE IF NOT EXISTS agent_runs (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Table: user_settings
+CREATE TABLE IF NOT EXISTS user_settings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    language TEXT NOT NULL DEFAULT 'en',
+    currency CHAR(3) NOT NULL DEFAULT 'USD',
+    theme TEXT NOT NULL DEFAULT 'light',
+    notifications BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Table: tokens
+CREATE TABLE IF NOT EXISTS tokens (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_accounts_user_id ON accounts(user_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_account_id ON transactions(account_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(date);
+CREATE INDEX IF NOT EXISTS idx_transactions_type ON transactions(type);
+CREATE INDEX IF NOT EXISTS idx_transactions_status ON transactions(status);
 -- Vector Index (IVFFlat is lighter, HNSW is faster/more accurate but needs more memory. HNSW is good for general purpose)
 -- Note: You need some data before creating an IVFFlat index effectively, but HNSW can be created empty.
 CREATE INDEX IF NOT EXISTS idx_transactions_embedding ON transactions USING hnsw (embedding vector_cosine_ops);
 
 CREATE INDEX IF NOT EXISTS idx_agent_runs_user_id ON agent_runs(user_id);
 CREATE INDEX IF NOT EXISTS idx_agent_runs_created_at ON agent_runs(created_at);
+
+CREATE INDEX IF NOT EXISTS idx_tokens_user_id ON tokens(user_id);
 
 -- Trigger to update 'updated_at'
 CREATE OR REPLACE FUNCTION update_updated_at_column()
