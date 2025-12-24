@@ -1,24 +1,22 @@
-from aiohttp.web_exceptions import HTTPException
+from uuid import UUID
+from typing import Annotated
+
 from application.services.auth_service import get_register_user
-from domain.entities.user_entities import UserCreate
 from application.services.auth_service import get_delete_user
-from domain.entities.user_entities import UserUpdate
 from application.services.auth_service import get_update_user
 from application.services.auth_service import get_hydrate_user, get_logout
-from core.deps import AuthUser
-
-from uuid import UUID
-
-from fastapi import APIRouter, Depends
-from domain.repositories import IUserRepository
-from fastapi.security import OAuth2PasswordRequestForm
-from typing import Annotated
 from application.services.auth_service import get_login
 
-from core.deps import oauth2_scheme
-from core.deps import get_user_repository
+from fastapi import APIRouter, Depends
+from fastapi.exceptions import HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
 
+from domain.entities.user_entities import UserCreate, UserUpdate
+from domain.repositories import IUserRepository
 from domain.entities.auth_entities import Token
+
+from core.deps import AuthUser, oauth2_scheme, get_user_repository
+
 
 auth_rt = APIRouter(prefix="/o", tags=["Authentication"])
 
@@ -37,7 +35,7 @@ async def logout(
     user_repo: Annotated[IUserRepository, Depends(get_user_repository)],
 ):
     if token is None:
-        raise HTTPException(reason="Unauthorized")
+        raise HTTPException(status_code=401, detail="Unauthorized")
     return await get_logout(token, user_repo)
 
 
@@ -47,7 +45,7 @@ async def me(
     user: AuthUser,
 ):
     if token is None:
-        raise HTTPException(reason="Unauthorized")
+        raise HTTPException(status_code=401, detail="Unauthorized")
     return Token(
         access_token=token, token_type="bearer", data={"user": user.model_dump()}
     )
@@ -59,7 +57,7 @@ async def hydrate(
     user_repo: Annotated[IUserRepository, Depends(get_user_repository)],
 ):
     if token is None:
-        raise HTTPException(reason="Unauthorized")
+        raise HTTPException(status_code=401, detail="Unauthorized")
     return await get_hydrate_user(token, user_repo)
 
 
@@ -70,7 +68,7 @@ async def register(
     user_repo: Annotated[IUserRepository, Depends(get_user_repository)],
 ):
     if token is None:
-        raise HTTPException(reason="Unauthorized")
+        raise HTTPException(status_code=401, detail="Unauthorized")
     return await get_register_user(user, user_repo)
 
 
@@ -81,8 +79,8 @@ async def update(
     user_repo: Annotated[IUserRepository, Depends(get_user_repository)],
 ):
     if token is None:
-        raise HTTPException(reason="Unauthorized")
-    return await get_update_user(user, user_repo)
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return await get_update_user(token, user, user_repo)
 
 
 @auth_rt.post("/delete", response_model=Token)
@@ -92,5 +90,5 @@ async def delete(
     user_repo: Annotated[IUserRepository, Depends(get_user_repository)],
 ):
     if token is None:
-        raise HTTPException(reason="Unauthorized")
-    return await get_delete_user(user_id, user_repo)
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return await get_delete_user(token, user_id, user_repo)

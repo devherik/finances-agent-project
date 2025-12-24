@@ -10,7 +10,12 @@ from domain.entities.user_entities import UserBase, UserUpdate
 from domain.entities.auth_entities import Token
 from domain.repositories import IUserRepository
 
-from helpers.auth_helper import create_access_token, validate_token, verify_password
+from helpers.auth_helper import (
+    create_access_token,
+    validate_token,
+    verify_password,
+    get_password_hash,
+)
 from helpers.loging_helper import logger
 
 
@@ -51,8 +56,10 @@ async def get_hydrate_user(
     token: str,
     user_repo: IUserRepository,
 ):
-    logger.debug(f"Hydrate attempt for user: {token}")
-    return Token(access_token="", token_type="bearer", data={})
+    user = await get_current_user(token, user_repo)
+    return Token(
+        access_token=token, token_type="bearer", data={"user": user.model_dump()}
+    )
 
 
 async def get_register_user(
@@ -60,22 +67,75 @@ async def get_register_user(
     user_repo: IUserRepository,
 ):
     logger.debug(f"Register attempt for user: {user.email}")
-    return Token(access_token="", token_type="bearer", data={})
+    try:
+        existing_user = await user_repo.get_by_email(user.email)
+    except Exception as e:
+        logger.error(f"An error occurred while checking for existing user: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    user.password = get_password_hash(user.password)
+
+    try:
+        new_user = await user_repo.create(user)
+    except Exception as e:
+        logger.error(f"An error occurred creating user: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+    access_token = create_access_token(data={"sub": new_user.email})
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        data={"user": new_user.model_dump()},
+    )
 
 
 async def get_update_user(
+    token: str,
     user: UserUpdate,
     user_repo: IUserRepository,
 ):
-    logger.debug(f"Update attempt for user: {user.email}")
-    return Token(access_token="", token_type="bearer", data={})
+    current_user = await get_current_user(token, user_repo)
+    logger.debug(f"Update attempt for user: {current_user.email}")
+    try:
+        updated_user = await user_repo.update(current_user.id, user)
+    except Exception as e:
+        logger.error(f"An error occurred updating user: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+    if updated_user is None:
+        raise HTTPException(status_code=400, detail="Could not update user")
+
+    return Token(
+        access_token=token,
+        token_type="bearer",
+        data={"user": updated_user.model_dump()},
+    )
 
 
 async def get_delete_user(
+    token: str,
     user_id: UUID,
     user_repo: IUserRepository,
 ):
-    logger.debug(f"Delete attempt for user: {user_id}")
+    current_user = await get_current_user(token, user_repo)
+    logger.debug(f"Delete attempt for user: {current_user.id}")
+
+    # Optional: Verify if the user being deleted is the current user or check admin rights
+    # For now, let's assume a user can only delete themselves if user_id matches
+    if current_user.id != user_id:
+        raise HTTPException(
+            status_code=403, detail="Not authorized to delete this user"
+        )
+
+    try:
+        await user_repo.delete(user_id)
+    except Exception as e:
+        logger.error(f"An error occurred deleting user: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
     return Token(access_token="", token_type="bearer", data={})
 
 
