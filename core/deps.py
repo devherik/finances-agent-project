@@ -10,11 +10,21 @@ from jose.exceptions import JWTError
 from typing import Annotated, AsyncGenerator
 from passlib.context import CryptContext
 
+from domain.entities.transactions_entities import TransactionBase
 from domain.entities.user_entities import UserBase
-from domain.repositories import IUserRepository
+from domain.entities.agent_entities import AgentRunBase
+from domain.repositories import (
+    IAgentRunRepository,
+    IAgentMemoryRepository,
+    IUserRepository,
+    ITransactionRepository,
+)
 
-from infrastructure.database.models import UserModel
+from infrastructure.database.models import UserModel, AgentRunModel, TransactionModel
 from infrastructure.repositories.user_repo import UserRepository
+from infrastructure.repositories.agent_run_repo import AgentRunRepository
+from infrastructure.repositories.agent_memory_repo import AgentMemoryRepository
+from infrastructure.repositories.transaction_repo import TransactionRepository
 
 from helpers.auth_helper import validate_token
 from helpers.loging_helper import logger
@@ -57,7 +67,31 @@ def get_user_repository(
     return UserRepository(UserModel, UserBase, session)
 
 
-# TODO: Create here the dependencies for the other repositories
+def get_agent_memory_repository(
+    session: AsyncSession = Depends(get_postgres_async_session),
+) -> IAgentMemoryRepository:
+    """
+    Returns a new instance of the AgentMemoryRepository injection.
+    """
+    return AgentMemoryRepository(session)
+
+
+def get_agent_run_repository(
+    session: AsyncSession = Depends(get_postgres_async_session),
+) -> IAgentRunRepository:
+    """
+    Returns a new instance of the AgentRunRepository injection.
+    """
+    return AgentRunRepository(AgentRunModel, AgentRunBase, session)
+
+
+def get_transaction_repository(
+    session: AsyncSession = Depends(get_postgres_async_session),
+) -> ITransactionRepository:
+    """
+    Returns a new instance of the TransactionRepository injection.
+    """
+    return TransactionRepository(TransactionModel, TransactionBase, session)
 
 
 async def get_current_user(
