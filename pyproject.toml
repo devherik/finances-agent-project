@@ -20,8 +20,17 @@ dependencies = [
     "pydantic>=2.11.9",
     "pymongo[srv]>=4.15.1",
     "pypdf>=6.0.0",
+    "pyrefly>=0.46.1",
     "python-jose[cryptography]>=3.5.0",
     "redis>=6.4.0",
     "sqlalchemy>=2.0.43",
     "uvicorn[standard]>=0.35.0",
+]
+
+[tool]
+
+[tool.pyrefly]
+project-includes = [
+    "**/*.py*",
+    "**/*.ipynb",
 ]
