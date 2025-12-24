@@ -5,6 +5,7 @@ from sqlalchemy import Column, String, Boolean, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.sql import func
+from pgvector.sqlalchemy import Vector
 
 
 class Base(DeclarativeBase):
@@ -56,6 +57,7 @@ class TransactionModel(Base):
     date = Column(DateTime(timezone=True), nullable=False)
     description = Column(String, nullable=False)
     merchant = Column(String, nullable=False)
+    embedding = Column(Vector(1536), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
@@ -97,6 +99,21 @@ class TokensModel(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), nullable=False)
     token = Column(String, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class AgentMemoryModel(Base):
+    __tablename__ = "agent_memories"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), nullable=False)
+    prompt = Column(String, nullable=False)
+    response = Column(String, nullable=False)
+    # Using 1536 dimensions as per implementation plan (compatible with OpenAI text-embedding-ada-002)
+    embedding = Column(Vector(1536), nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()

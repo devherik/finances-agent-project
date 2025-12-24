@@ -80,6 +80,17 @@ CREATE TABLE IF NOT EXISTS agent_runs (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Table: agent_memories
+CREATE TABLE IF NOT EXISTS agent_memories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    prompt TEXT NOT NULL,
+    response TEXT NOT NULL,
+    embedding vector(1536), -- Vector embedding for search
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Table: user_settings
 CREATE TABLE IF NOT EXISTS user_settings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -115,6 +126,9 @@ CREATE INDEX IF NOT EXISTS idx_transactions_embedding ON transactions USING hnsw
 
 CREATE INDEX IF NOT EXISTS idx_agent_runs_user_id ON agent_runs(user_id);
 CREATE INDEX IF NOT EXISTS idx_agent_runs_created_at ON agent_runs(created_at);
+CREATE INDEX IF NOT EXISTS idx_agent_memories_user_id ON agent_memories(user_id);
+CREATE INDEX IF NOT EXISTS idx_agent_memories_created_at ON agent_memories(created_at);
+CREATE INDEX IF NOT EXISTS idx_agent_memories_embedding ON agent_memories USING hnsw (embedding vector_cosine_ops);
 
 CREATE INDEX IF NOT EXISTS idx_tokens_user_id ON tokens(user_id);
 
