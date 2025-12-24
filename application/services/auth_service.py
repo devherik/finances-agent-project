@@ -34,7 +34,9 @@ async def get_login(
         raise HTTPException(status_code=400, detail="Incorrect password")
     access_token = create_access_token(data={"sub": user.email})
     logger.debug("Login successful")
-    return Token(access_token=access_token, token_type="bearer", data={})
+    return Token(
+        access_token=access_token, token_type="bearer", data={"user": user.model_dump()}
+    )
 
 
 async def get_logout(
