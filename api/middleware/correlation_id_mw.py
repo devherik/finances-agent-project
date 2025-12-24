@@ -9,10 +9,16 @@ import uuid
 from fastapi import Request
 
 
+from core.context import set_correlation_id
+
+
 async def correlation_id_middleware(request: Request, call_next):
     correlation_id = request.headers.get("X-Correlation-ID")
     if not correlation_id:
         correlation_id = str(uuid.uuid4())
+
+    # Set context variable for logging
+    set_correlation_id(correlation_id)
 
     # Add the correlation ID to the request state
     request.state.correlation_id = correlation_id

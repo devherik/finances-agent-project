@@ -1,5 +1,6 @@
 from core.settings import settings
 from helpers.applog_helper import write_on_file
+from core.context import get_correlation_id
 
 # Define ANSI escape codes for colors and reset
 RED = "\033[91m"
@@ -37,6 +38,8 @@ class LoggerHelper:
             message (str): The message to log.
             correlation_id (str): An optional correlation ID for tracking requests.
         """
+        if not correlation_id:
+            correlation_id = get_correlation_id()
         if self.is_development:
             print(f"{BLUE}INFO {correlation_id} {RESET}{message}")
         else:
@@ -48,6 +51,8 @@ class LoggerHelper:
             message (str): The success message to log.
             correlation_id (str): An optional correlation ID for tracking requests.
         """
+        if not correlation_id:
+            correlation_id = get_correlation_id()
         if self.is_development:
             print(f"{GREEN}SUCCESS {correlation_id} {RESET}{message}")
         else:
@@ -59,6 +64,8 @@ class LoggerHelper:
             message (str): The warning message to log.
             correlation_id (str): An optional correlation ID for tracking requests.
         """
+        if not correlation_id:
+            correlation_id = get_correlation_id()
         if self.is_development:
             print(f"{YELLOW}WARNING {correlation_id} {RESET}{message}")
         else:
@@ -71,6 +78,8 @@ class LoggerHelper:
             message (str): The error message to log.
             correlation_id (str): An optional correlation ID for tracking requests.
         """
+        if not correlation_id:
+            correlation_id = get_correlation_id()
         if self.is_development:
             print(f"{RED}ERROR {correlation_id} {RESET}{message}")
         else:
@@ -83,6 +92,8 @@ class LoggerHelper:
             message (str): The debug message to log.
             correlation_id (str): An optional correlation ID for tracking requests.
         """
+        if not correlation_id:
+            correlation_id = get_correlation_id()
         if self.is_debug:
             if self.is_development:
                 print(f"{MAGENTA}DEBUG {correlation_id} {RESET}{message}")
@@ -107,7 +118,7 @@ class ProgressBar:
     def __init__(self, total: int):
         self.total = total
         self.current = 0
-        self.is_development = settings.DEVELOPMENT_ENV == "development"
+        self.is_development = settings.environment == "development"
 
     def update(self):
         self.current += 1
