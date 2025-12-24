@@ -1,12 +1,10 @@
-from domain.entities.user_entities import UserCreate
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from fastapi.exceptions import HTTPException
 
+from uuid import UUID
 from jose.exceptions import JWTError
 
-from uuid import UUID
-
-from domain.entities.user_entities import UserBase, UserUpdate
+from domain.entities.user_entities import UserBase, UserUpdate, UserCreate
 from domain.entities.auth_entities import Token
 from domain.repositories import IUserRepository
 
@@ -23,7 +21,9 @@ async def get_login(
     form_data: OAuth2PasswordRequestForm,
     user_repo: IUserRepository,
 ):
-    logger.debug(f"Login attempt for user: {form_data.username}")
+    logger.debug(
+        f"Login attempt for user: {form_data.username}",
+    )
 
     try:
         user = await user_repo.get_by_email(form_data.username)

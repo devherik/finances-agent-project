@@ -3,6 +3,7 @@ from fastapi.concurrency import asynccontextmanager
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from api.routers.auth_routers import auth_rt
+from api.middleware.correlation_id_mw import correlation_id_middleware
 
 from helpers.loging_helper import logger
 from core.settings import settings
@@ -35,6 +36,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+app.middleware("http")(correlation_id_middleware)
 
 app.include_router(auth_rt)
 
