@@ -20,7 +20,7 @@ class AgentRunRepository(
     SQLAlchemy implementation for Agent Run Repository.
     """
 
-    async def get_runs_by_session(self, session_id: str) -> List[AgentRunBase]:
+    async def get_runs_by_session(self, session_id: UUID) -> List[AgentRunBase]:
         """
         Retrieves agent runs for a specific session.
         Note: The AgentRunModel currently does not have a 'session_id' column in the provided schema.
@@ -45,7 +45,7 @@ class AgentRunRepository(
         # I will implement filtering by input_context assuming it's a JSON field.
 
         query = select(self.model).where(
-            self.model.input_context["session_id"].astext == session_id
+            self.model.input_context["session_id"] == session_id
         )
         result = await self.db.execute(query)
         db_objs = result.scalars().all()

@@ -1,3 +1,4 @@
+from sqlalchemy.sql.sqltypes import Integer
 import uuid
 from sqlalchemy.sql.sqltypes import Numeric
 from sqlalchemy.dialects.postgresql.json import JSONB
@@ -64,14 +65,33 @@ class TransactionModel(Base):
     )
 
 
+class SessionModel(Base):
+    __tablename__ = "sessions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), nullable=False)
+    session_id = Column(UUID(as_uuid=True), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
 class AgentRunModel(Base):
     __tablename__ = "agent_runs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), nullable=False)
+    session_id = Column(UUID(as_uuid=True), nullable=False)
     agent_name = Column(String, nullable=False)
     model_name = Column(String, nullable=False)
     input_context = Column(JSONB, nullable=False)
+    output_result = Column(JSONB, nullable=False)
+    status = Column(String, nullable=False)
+    prompt_tokens = Column(Integer, nullable=False)
+    completion_tokens = Column(Integer, nullable=False)
+    execution_time_ms = Column(Integer, nullable=False)
+    error_message = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()

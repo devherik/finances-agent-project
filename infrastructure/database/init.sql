@@ -63,10 +63,20 @@ CREATE TABLE IF NOT EXISTS transactions (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Table: sessions
+CREATE TABLE IF NOT EXISTS sessions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    session_id UUID NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Table: agent_runs
 CREATE TABLE IF NOT EXISTS agent_runs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
     agent_name TEXT NOT NULL,
     model_name TEXT NOT NULL,
     input_context JSONB DEFAULT '{}'::jsonb,
@@ -124,12 +134,16 @@ CREATE INDEX IF NOT EXISTS idx_transactions_status ON transactions(status);
 -- Note: You need some data before creating an IVFFlat index effectively, but HNSW can be created empty.
 CREATE INDEX IF NOT EXISTS idx_transactions_embedding ON transactions USING hnsw (embedding vector_cosine_ops);
 
+-- Indexes
 CREATE INDEX IF NOT EXISTS idx_agent_runs_user_id ON agent_runs(user_id);
 CREATE INDEX IF NOT EXISTS idx_agent_runs_created_at ON agent_runs(created_at);
+CREATE INDEX IF NOT EXISTS idx_agent_runs_session_id ON agent_runs(session_id);
 CREATE INDEX IF NOT EXISTS idx_agent_memories_user_id ON agent_memories(user_id);
 CREATE INDEX IF NOT EXISTS idx_agent_memories_created_at ON agent_memories(created_at);
 CREATE INDEX IF NOT EXISTS idx_agent_memories_embedding ON agent_memories USING hnsw (embedding vector_cosine_ops);
-
+CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_created_at ON sessions(created_at);
+CREATE INDEX IF NOT EXISTS idx_sessions_session_id ON sessions(session_id);
 CREATE INDEX IF NOT EXISTS idx_tokens_user_id ON tokens(user_id);
 
 -- Trigger to update 'updated_at'
