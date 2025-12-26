@@ -4,7 +4,11 @@ from typing import Generic, TypeVar, List, Optional
 from uuid import UUID
 
 from domain.entities.user_entities import UserBase, UserCreate, UserUpdate
-from domain.entities.account_entities import AccountBase, AccountCreate, AccountUpdate
+from domain.entities.transactions_entities import (
+    AccountBase,
+    AccountCreate,
+    AccountUpdate,
+)
 from domain.entities.transactions_entities import (
     TransactionBase,
     TransactionCreate,
