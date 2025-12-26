@@ -1,8 +1,10 @@
+from datetime import datetime
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar, List, Optional
 from uuid import UUID
 
 from domain.entities.user_entities import UserBase, UserCreate, UserUpdate
+from domain.entities.account_entities import AccountBase, AccountCreate, AccountUpdate
 from domain.entities.transactions_entities import (
     TransactionBase,
     TransactionCreate,
@@ -92,6 +94,24 @@ class IUserRepository(BaseRepository[UserBase, UserCreate, UserUpdate]):
         """
         Crucial for our bot: We need to find users by their CNPJ, not just UUID.
         """
+        pass
+
+
+class IAccountRepository(BaseRepository[AccountBase, AccountCreate, AccountUpdate]):
+    """
+    Specific contract for Financial Accounts.
+    """
+
+    @abstractmethod
+    async def get_by_user(
+        self, user_id: UUID, skip: int = 0, limit: int = 100
+    ) -> List[AccountBase]:
+        pass
+
+    @abstractmethod
+    async def get_balance_by_period(
+        self, user_id: UUID, account_id: UUID, start_date: datetime, end_date: datetime
+    ) -> float:
         pass
 
 
