@@ -111,6 +111,7 @@ async def embed_from_pdf(path: str) -> List[Document]:
                         id=f"{doc_id}_{chunk}",  # Note: This ID format might be problematic if chunks are identical across diff runs without unique seed, but keeping close to original logic
                         meta_data={"source": path},
                         name=f"pdf_{len(documents)}",
+                        embedding=_get_embedding(chunk),
                         content=chunk,
                     )
                 )
@@ -146,6 +147,7 @@ async def embed_from_rows(rows: List[Dict[str, Any]]) -> List[Document]:
                 id=f"{doc_id}_{i}_{chunk}",
                 meta_data=metadata,
                 name=f"row_{doc_id}",
+                embedding=_get_embedding(chunk),
                 content=chunk,
             )
             documents.append(document)
