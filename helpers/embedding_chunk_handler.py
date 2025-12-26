@@ -1,10 +1,12 @@
 import json
 import uuid
-from typing import List, Dict, Any
 
-from pypdf import PdfReader
-from agno.knowledge.document import Document
+from typing import List, Dict, Any
 from starlette.concurrency import run_in_threadpool
+from pypdf import PdfReader
+
+from agno.knowledge.document import Document
+from agno.knowledge.embedder.google import GeminiEmbedder
 
 from helpers.chunck_text_helper import chunk_text_helper
 from helpers.loging_helper import logger
@@ -27,6 +29,12 @@ def _extract_text_from_pdf(path: str) -> str:
         if text:
             text_content.append(text)
     return "\n".join(text_content)
+
+
+def _get_embedding(text: str) -> List[float]:
+    """Helper to get embedding synchronously."""
+    embedder = GeminiEmbedder(api_key=settings.gemini_api_key)
+    return embedder.get_embedding(text)
 
 
 async def embed_from_json(path: str) -> List[Document]:
@@ -65,6 +73,7 @@ async def embed_from_json(path: str) -> List[Document]:
                 id=f"{doc_id}_{i}_{chunk}",
                 meta_data=metadata,
                 name=f"{file_name}_chunk_{doc_id}",
+                embedding=_get_embedding(chunk),
                 content=chunk,  # Use the actual text content, not embeddings
             )
             documents.append(document)

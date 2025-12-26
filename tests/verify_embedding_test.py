@@ -7,7 +7,6 @@ import os
 sys.path.append(os.getcwd())
 
 from helpers.embedding_chunk_handler import embed_from_json, embed_from_rows
-from core.settings import settings
 
 # Configure logging to stdout
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
