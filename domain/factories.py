@@ -8,22 +8,27 @@ infrastructure layer provides the concrete implementations.
 """
 
 from typing import Any
+
 from core.settings import settings
-from agno.db.redis import RedisDb
-from agno.db.mongo import MongoDb
+
+from agno.agent import Agent
 from agno.models.google import Gemini
+from agno.vectordb.pgvector import PgVector, SearchType
+from agno.vectordb.redis import RedisDB
 from agno.knowledge.embedder.google import GeminiEmbedder
-from agno.knowledge.knowledge import Knowledge
 
 
-def create_redis_memory_db() -> Any:
+def create_redis_memory_db() -> RedisDB:
     """
     Factory function to create a Redis memory database instance.
-    
+
     Returns:
-        RedisMemoryDb: Configured Redis memory database instance
+        RedisDB: Configured Redis memory database instance
     """
-    return RedisDb(
+    return RedisDB(
+        redis_url=settings.get_redis_url,
+        index_name=settings.get_redis_index_name,
+        search_type=SearchType.vector,
     )
 
 
@@ -33,107 +38,64 @@ def create_google_model(model_id: str = "") -> Any:
 
     Args:
         model_id: The model identifier to use
-        
+
     Returns:
         GoogleChat: Configured GoogleChat model instance
     """
     model_id = model_id or settings.gemini_standard_model_name
-    return Gemini(id=model_id, api_key=settings.gemini_standard_model_name)
+    return Gemini(
+        id=model_id,
+        api_key=settings.gemini_standard_model_name,
+        temperature=0.7,
+        project_id=settings.gemini_project_id,
+    )
 
 
-def create_google_embedder() -> Any:
+def create_google_embedder() -> GeminiEmbedder:
     """
     Factory function to create a Google embedder instance.
-    
+
     Returns:
         GoogleEmbedder: Configured Google embedder instance
     """
     return GeminiEmbedder(api_key=settings.gemini_standard_model_name)
 
 
-def create_mongo_db(table_name: str) -> Any:
+def create_pgvector_knowledge_db(table_name: str) -> PgVector:
     """
-    Factory function to create a MongoDB database instance.
+    Factory function to create a PostgreSQL database instance.
 
     Args:
         table_name: Name of the table for the vector database
-        
+
     Returns:
-        MongoDb: Configured MongoDB database instance
+        PgVector: Configured PostgreSQL database instance
     """
-    connection_string = settings.get_mongo_connection_string
-    return MongoDb(
-        db_url=connection_string,
-        db_name=settings.mongodb_database,
-        knowledge_collection=table_name
+    table_name = table_name or "knowledge"
+    return PgVector(
+        db_url=settings.get_postgres_connection_string,
+        table_name=table_name,
+        search_type=SearchType.hybrid,
+        embedder=create_google_embedder(),
     )
-
-
-def create_finance_db() -> Any:
-    """
-    Factory function to create a MongoDB database instance for finance operations.
-    
-    Returns:
-        Database: Configured MongoDB database instance for finance collections
-        
-    Note: This factory creates a database instance specifically for finance
-    operations, separate from the vector database used for AI knowledge.
-    """
-    from pymongo import MongoClient
-    
-    client = MongoClient(settings.get_mongo_connection_string)
-    return client[settings.mongodb_database]
-
-
-def initialize_finance_database(drop_existing: bool = False) -> bool:
-    """
-    Factory function to initialize the finance database with proper schema.
-    
-    Args:
-        drop_existing: Whether to drop existing collections before initialization
-        
-    Returns:
-        bool: True if initialization was successful
-        
-    Note: This function sets up the complete database schema including
-    collections, indexes, and validation rules.
-    """
-    from repositories.mongodb_initializer import initialize_finance_database
-    
-    db = create_finance_db()
-    return initialize_finance_database(db, drop_existing=drop_existing)
 
 
 def create_agents_service() -> Any:
     """
     Factory function to create an AgentsService with all dependencies injected.
-    
+
     This is the main factory that wires up all dependencies following
     the Dependency Injection pattern.
-    
+
     Returns:
         AgentsService: Fully configured AgentsService instance
     """
     from services.agent_service import AgentsService
-    
+
     return AgentsService(
         storage=None,  # Replace with actual storage implementation
         memory_db=create_redis_memory_db(),
         model=create_google_model(),
         embedder_factory=create_google_embedder,
-        vector_db_factory=create_mongo_db
-    )
-    
-def create_document_knowledge_base(table_name: str) -> Any:
-    """
-    Factory function to create a DocumentKnowledgeBase instance.
-    
-    Args:
-        table_name: Name of the table for the vector database
-        
-    Returns:
-        Knowledge: Configured Knowledge instance
-    """
-    return Knowledge(
-        vector_db=create_mongo_db(table_name)
+        vector_db_factory=create_pgvector_knowledge_db,
     )

@@ -27,6 +27,7 @@ class Settings(BaseSettings):
 
     # AI Model settings
     gemini_api_key: str = os.getenv("GEMINI_API_KEY", "your_gemini_api_key")
+    gemini_project_id: str = os.getenv("GEMINI_PROJECT_ID", "your_gemini_project_id")
     gemini_standard_model_name: str = os.getenv("GEMINI_MODEL_NAME", "gemini-2.5-flash")
     gemini_premium_model_name: str = os.getenv(
         "GEMINI_PREMIUM_MODEL_NAME", "gemini-2.5-premium"
@@ -55,6 +56,14 @@ class Settings(BaseSettings):
     @property
     def get_postgres_url(self) -> str:
         return f"postgresql+psycopg2://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+
+    @property
+    def get_redis_url(self) -> str:
+        return os.getenv("REDIS_URL", "redis://localhost:6379/0")
+
+    @property
+    def get_redis_index_name(self) -> str:
+        return os.getenv("REDIS_INDEX_NAME", "knowledge")
 
     @property
     def get_async_postgres_url(self) -> str:

@@ -13,6 +13,8 @@ from helpers.loging_helper import logger
 
 from core.settings import settings
 
+from domain.factories import create_google_embedder
+
 
 def _load_json_file(path: str) -> List[Dict[str, Any]]:
     """Helper to load JSON file synchronously."""
@@ -33,7 +35,7 @@ def _extract_text_from_pdf(path: str) -> str:
 
 def _get_embedding(text: str) -> List[float]:
     """Helper to get embedding synchronously."""
-    embedder = GeminiEmbedder(api_key=settings.gemini_api_key)
+    embedder: GeminiEmbedder = create_google_embedder()
     return embedder.get_embedding(text)
 
 
