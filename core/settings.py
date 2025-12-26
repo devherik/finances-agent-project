@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     # Other settings
     log_level: str = "INFO"
     max_concurrent_requests: int = 5
+    embedding_chunk_size: int = 384
 
     # Auth settings
     secret_key: str = os.getenv("SECRET_KEY", "your_secret_key")

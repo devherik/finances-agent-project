@@ -1,15 +1,11 @@
 import asyncio
 import traceback
 
-from domain.repositories import IUserRepository
-from domain.entities.user_entities import UserCreate, UserUpdate
 from infrastructure.database.models import Base
-from helpers.auth_helper import get_password_hash, verify_password
 from helpers.loging_helper import logger
 from core.deps import (
     get_postgres_engine,
     get_postgres_async_session,
-    get_user_repository,
 )
 
 
@@ -29,56 +25,12 @@ async def main():
 
         # 4. Use Session
         async with AsyncSessionLocal() as session:
-            # Instantiate Repository with ORM Model AND Domain Model
-            user_repository: IUserRepository = get_user_repository(session)
-
-            logger.info("Hashing and verifying password...")
-            password = "strongpassword123"
-            hashed_password = get_password_hash(password)
-            assert verify_password(password, hashed_password)
-            logger.success("Password hashed and verified successfully.")
-
-            logger.info("Creating user...")
-            new_user = await user_repository.create(
-                UserCreate(
-                    name="Herik Rezende",
-                    email="herikrezende@gmail.com",
-                    password=hashed_password,
-                    cpf="12345678901",
-                    cnpj="12345678901234",
-                    phone="12345678901",
-                )
-            )
-            logger.success(f"Created User: {new_user}")
-            logger.spacer()
-
-            logger.info("Fetching user...")
-            fetched_user = await user_repository.get(new_user.id)
-            logger.success(f"Fetched User: {fetched_user}")
-            logger.spacer()
-
-            logger.info("Updating user...")
-            updated_user = await user_repository.update(
-                new_user.id,
-                UserUpdate(
-                    name="Herik R. Updated",
-                    email="herikupdated@gmail.com",
-                    cnpj="12345678901234",
-                    phone="12345678901",
-                ),
-            )
-            logger.success(f"Updated User: {updated_user}")
-            logger.spacer()
-
-            logger.info("Verifying updated password...")
-            assert verify_password(password, updated_user.password)
-            logger.success("Updated password verified successfully.")
-            logger.spacer()
-
-            logger.info("Deleting user...")
-            await user_repository.delete(new_user.id)
-            logger.success("User deleted")
-            logger.spacer()
+            # 5. Create Vector Repository
+            # 6. Embedding
+            # 7. Save Interaction
+            # 8. Search Similar Interactions
+            # 9. Delete Interaction
+            # 10. Delete All Interactions
 
         await engine.dispose()
 
