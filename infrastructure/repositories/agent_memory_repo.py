@@ -34,7 +34,7 @@ class AgentMemoryRepository(IAgentMemoryRepository):
         await self.db.commit()
 
     async def search_similar_interactions(
-        self, user_id: UUID, query: str, k: int = 5
+        self, user_id: UUID, embedding: List[float], k: int = 5
     ) -> List[AgentRunMemoryBase]:
         """
         Searches for similar interactions using vector similarity.

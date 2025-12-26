@@ -138,6 +138,6 @@ class IAgentMemoryRepository(ABC):
 
     @abstractmethod
     async def search_similar_interactions(
-        self, user_id: UUID, query: str, k: int = 5
+        self, user_id: UUID, embedding: List[float], k: int = 5
     ) -> List[AgentRunMemoryBase]:
         pass
