@@ -7,32 +7,28 @@ by allowing the application layer to depend on abstractions while the
 infrastructure layer provides the concrete implementations.
 """
 
-from typing import Any
-
 from core.settings import settings
 
-from agno.agent import Agent
 from agno.models.google import Gemini
 from agno.vectordb.pgvector import PgVector, SearchType
-from agno.vectordb.redis import RedisDB
+from agno.db.postgres import PostgresDb
+from agno.db.redis import RedisDb
 from agno.knowledge.embedder.google import GeminiEmbedder
 
 
-def create_redis_memory_db() -> RedisDB:
+def create_redis_memory_db() -> RedisDb:
     """
     Factory function to create a Redis memory database instance.
 
     Returns:
-        RedisDB: Configured Redis memory database instance
+        RedisDb: Configured Redis memory database instance
     """
-    return RedisDB(
-        redis_url=settings.get_redis_url,
-        index_name=settings.get_redis_index_name,
-        search_type=SearchType.vector,
+    return RedisDb(
+        db_url=settings.get_redis_url,
     )
 
 
-def create_google_model(model_id: str = "") -> Any:
+def create_google_model(model_id: str = "") -> Gemini:
     """
     Factory function to create a Google model instance.
 
@@ -40,12 +36,12 @@ def create_google_model(model_id: str = "") -> Any:
         model_id: The model identifier to use
 
     Returns:
-        GoogleChat: Configured GoogleChat model instance
+        Gemini: Configured Gemini model instance
     """
     model_id = model_id or settings.gemini_standard_model_name
     return Gemini(
         id=model_id,
-        api_key=settings.gemini_standard_model_name,
+        api_key=settings.gemini_api_key,
         temperature=0.7,
         project_id=settings.gemini_project_id,
     )
@@ -56,9 +52,21 @@ def create_google_embedder() -> GeminiEmbedder:
     Factory function to create a Google embedder instance.
 
     Returns:
-        GoogleEmbedder: Configured Google embedder instance
+        GeminiEmbedder: Configured Gemini embedder instance
     """
-    return GeminiEmbedder(api_key=settings.gemini_standard_model_name)
+    return GeminiEmbedder(api_key=settings.gemini_api_key)
+
+
+def create_postgres_db() -> PostgresDb:
+    """
+    Factory function to create a PostgreSQL database instance.
+
+    Returns:
+        PostgresDB: Configured PostgreSQL database instance
+    """
+    return PostgresDb(
+        db_url=settings.get_postgres_url,
+    )
 
 
 def create_pgvector_knowledge_db(table_name: str) -> PgVector:
@@ -73,29 +81,8 @@ def create_pgvector_knowledge_db(table_name: str) -> PgVector:
     """
     table_name = table_name or "knowledge"
     return PgVector(
-        db_url=settings.get_postgres_connection_string,
+        db_url=settings.get_postgres_url,
         table_name=table_name,
         search_type=SearchType.hybrid,
         embedder=create_google_embedder(),
-    )
-
-
-def create_agents_service() -> Any:
-    """
-    Factory function to create an AgentsService with all dependencies injected.
-
-    This is the main factory that wires up all dependencies following
-    the Dependency Injection pattern.
-
-    Returns:
-        AgentsService: Fully configured AgentsService instance
-    """
-    from services.agent_service import AgentsService
-
-    return AgentsService(
-        storage=None,  # Replace with actual storage implementation
-        memory_db=create_redis_memory_db(),
-        model=create_google_model(),
-        embedder_factory=create_google_embedder,
-        vector_db_factory=create_pgvector_knowledge_db,
     )
