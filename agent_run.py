@@ -30,6 +30,7 @@ async def main():
             cache_session=True,
             search_session_history=True,
             add_memories_to_context=True,
+            add_history_to_context=True,
         )
         response = agent.run("What is a binary search tree? And how does it work?")
         metrics = {
