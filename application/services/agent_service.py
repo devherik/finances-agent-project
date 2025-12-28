@@ -1,7 +1,9 @@
+from domain.factories import create_redis_memory_db
 from domain.factories import create_google_model
 from typing import Optional, Callable, Any
 
 from agno.agent import Agent
+from agno.memory import MemoryManager
 from agno.knowledge.knowledge import Knowledge
 
 from helpers.datetime_helper import get_current_date_context_helper
@@ -75,17 +77,25 @@ class AgentsService:
 
         model_instance = create_google_model(model_id)
 
+        date_context = get_current_date_context_helper()
+        instructions = f"{instructions}\n\n{date_context}"
+
         # Create base agent configuration
         base_config = {
+            "model": model_instance,
+            "instructions": instructions,
             "name": name,
             "role": role,
-            "model": model_instance,
-            "enable_agentic_memory": self.memory,
+            "markdown": True,
             "db": self.storage,
+            "memory_manager": self._create_memory_manager(model_instance),
+            "enable_agentic_memory": self.memory,
+            "cache_session": True,
+            "search_session_history": True,
+            "add_memories_to_context": True,
+            "add_history_to_context": True,
             "tools": tools,
-            "instructions": instructions,
             "session_id": session_id,
-            "enable_user_memories": True,
         }
 
         # Add knowledge base if specified (following polymorphism)
@@ -136,18 +146,25 @@ class AgentsService:
             session_id=session_id,
         )
 
+        date_context = get_current_date_context_helper()
+        instructions = f"{instructions}\n\n{date_context}"
+
         # Create base agent configuration
         base_config = {
+            "model": model_instance,
+            "instructions": instructions,
             "name": name,
             "role": role,
-            "model": model_instance,
-            "enable_agentic_memory": self.memory,
+            "markdown": True,
             "db": self.storage,
+            "memory_manager": self._create_memory_manager(model_instance),
+            "enable_agentic_memory": self.memory,
+            "cache_session": True,
+            "search_session_history": True,
+            "add_memories_to_context": True,
+            "add_history_to_context": True,
             "tools": tools,
-            "instructions": instructions,
             "session_id": session_id,
-            "search_history_sessions": True,
-            "enable_user_memories": True,
             "reasoning": True,
             "reasoning_agent": reasoning_agent,
             "reasoning_model": create_google_model("gemini-2.5-pro"),
@@ -179,4 +196,10 @@ class AgentsService:
         return Knowledge(
             vector_db=self.vector_db_factory(table_name),
             max_results=max_documents,
+        )
+
+    def _create_memory_manager(self, model: Any):
+        return MemoryManager(
+            db=create_redis_memory_db(),
+            model=model,
         )

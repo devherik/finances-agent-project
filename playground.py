@@ -1,4 +1,4 @@
-from domain.factories import create_redis_memory_db
+from domain.factories import create_postgres_db
 from domain.factories import create_pgvector_knowledge_db
 from domain.factories import create_google_embedder
 from domain.factories import create_google_model
@@ -48,8 +48,9 @@ If the user uses the phrase "MANUAL REVIEW," immediately summarize the current s
 
 async def main():
     try:
+        up_content = prompt.replace("{{COMPANY_NAME}}", "B2B Skewer Manufacturer")
         service = AgentsService(
-            storage=create_pgvector_knowledge_db("knowledge"),
+            storage=create_postgres_db(),
             memory=True,
             model=create_google_model(),
             embedder_factory=create_google_embedder,
@@ -59,11 +60,11 @@ async def main():
             name="Financial Interaction Specialist",
             model_id=settings.gemini_standard_model_name,
             role="Financial Interaction Specialist",
-            instructions=prompt,
+            instructions=up_content,
             tools=[],
         )
 
-        agent.print_response("Hello, how are you?")
+        agent.print_response("What can you do?")
 
     except Exception as e:
         logger.error(f"An error occurred: {e}")
