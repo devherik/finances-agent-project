@@ -6,10 +6,13 @@ from agno.agent import Agent
 from agno.tools import Toolkit
 
 from application.services.transaction_service import TransactionService
+from application.services.account_service import AccountService
 from domain.entities.transactions_entities import (
     TransactionCreate,
     TransactionType,
     TransactionStatus,
+    AccountCreate,
+    AccountUpdate,
 )
 from domain.entities.user_entities import UserBase
 
@@ -18,14 +21,20 @@ class FinanceTools(Toolkit):
     def __init__(
         self,
         transaction_service: TransactionService,
+        account_service: AccountService,
         user_id: str,
     ):
         super().__init__(name="finance_tools")
         self.transaction_service = transaction_service
+        self.account_service = account_service
         self.user_id = user_id
         self.register(self.create_transaction)
         self.register(self.get_my_transactions)
         self.register(self.get_pending_incomes)
+        self.register(self.create_account)
+        self.register(self.get_my_accounts)
+        self.register(self.get_account_balance)
+        self.register(self.update_account_info)
 
     async def create_transaction(
         self,
@@ -129,3 +138,128 @@ class FinanceTools(Toolkit):
             return result
         except Exception as e:
             return f"Failed to fetch pending incomes: {str(e)}"
+
+    async def create_account(
+        self,
+        account_type: str,
+        balance: float,
+        currency: str = "USD",
+    ) -> str:
+        """
+        Creates a new financial account (e.g., checking, savings).
+
+        Args:
+            account_type: The type of account (e.g., 'checking', 'savings', 'investment').
+            balance: Initial balance. Must be positive.
+            currency: Currency code (e.g., 'USD'). Defaults to 'USD'.
+
+        Returns:
+            Confirmation message with account ID.
+        """
+        import datetime
+
+        current_time = datetime.datetime.now().isoformat()
+        try:
+            account_data = AccountCreate(
+                user_id=self.user_id,
+                account_type=account_type,
+                balance=Decimal(str(balance)),
+                currency=currency,
+                created_at=current_time,
+                updated_at=current_time,
+            )
+            result = await self.account_service.create_account(account_data)
+            return f"Account created successfully. ID: {result.id}"
+        except Exception as e:
+            return f"Failed to create account: {str(e)}"
+
+    async def get_my_accounts(self) -> str:
+        """
+        Retrieves the user's accounts.
+
+        Returns:
+            A formatted string list of accounts.
+        """
+        try:
+            accounts = await self.account_service.get_user_accounts(
+                user_id=UUID(self.user_id)
+                if isinstance(self.user_id, str)
+                else self.user_id
+            )
+            if not accounts:
+                return "No accounts found."
+
+            result = "Your Accounts:\n"
+            for acc in accounts:
+                result += f"- {acc.account_type.capitalize()}: {acc.balance} {acc.currency} (ID: {acc.id})\n"
+            return result
+        except Exception as e:
+            return f"Failed to fetch accounts: {str(e)}"
+
+    async def get_account_balance(self, account_id: str) -> str:
+        """
+        Gets the balance of a specific account.
+
+        Args:
+            account_id: The ID of the account.
+
+        Returns:
+            The balance or error message.
+        """
+        try:
+            balance = await self.account_service.get_account_balance(
+                user_id=UUID(self.user_id)
+                if isinstance(self.user_id, str)
+                else self.user_id,
+                account_id=UUID(account_id),
+            )
+            if balance is None:
+                return "Account not found or access denied."
+            return f"Current Balance: {balance}"
+        except Exception as e:
+            return f"Failed to fetch balance: {str(e)}"
+
+    async def update_account_info(
+        self,
+        account_id: str,
+        account_type: Optional[str] = None,
+        currency: Optional[str] = None,
+    ) -> str:
+        """
+        Updates account information.
+
+        Args:
+            account_id: The ID of the account to update.
+            account_type: New account type (optional).
+            currency: New currency (optional).
+
+        Returns:
+            Confirmation message or error.
+        """
+        import datetime
+
+        try:
+            acc_uuid = UUID(account_id)
+            # Fetch existing account
+            account = await self.account_service.get_account(acc_uuid)
+            if not account or str(account.user_id) != str(self.user_id):
+                return "Account not found or access denied."
+
+            # Update fields
+            updated_data = account.model_dump()
+            if account_type:
+                updated_data["account_type"] = account_type
+            if currency:
+                updated_data["currency"] = currency
+
+            updated_data["updated_at"] = datetime.datetime.now().isoformat()
+
+            # Create update object
+            update_obj = AccountUpdate(**updated_data)
+
+            result = await self.account_service.update_account(acc_uuid, update_obj)
+            if result:
+                return "Account updated successfully."
+            return "Failed to update account."
+        except Exception as e:
+            return f"Error updating account: {str(e)}"
