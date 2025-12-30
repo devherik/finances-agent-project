@@ -1,8 +1,7 @@
 from decimal import Decimal
-from typing import List, Optional
+from typing import Optional
 from uuid import UUID
 
-from agno.agent import Agent
 from agno.tools import Toolkit
 
 from application.services.transaction_service import TransactionService
@@ -14,7 +13,6 @@ from domain.entities.transactions_entities import (
     AccountCreate,
     AccountUpdate,
 )
-from domain.entities.user_entities import UserBase
 
 
 class FinanceTools(Toolkit):
