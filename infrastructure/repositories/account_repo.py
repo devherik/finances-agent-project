@@ -1,13 +1,16 @@
 from sqlalchemy.sql.functions import func
 from sqlalchemy.future import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from uuid import UUID
 from typing import List
 from datetime import datetime
 
 from domain.repositories import IAccountRepository
-from domain.entities.account_entities import AccountBase, AccountCreate, AccountUpdate
+from domain.entities.transactions_entities import (
+    AccountBase,
+    AccountCreate,
+    AccountUpdate,
+)
 
 from infrastructure.repositories.base_sql_repo import SQLAlchemyRepository
 from infrastructure.database.models import AccountModel
@@ -17,9 +20,6 @@ class AccountRepository(
     SQLAlchemyRepository[AccountModel, AccountBase, AccountCreate, AccountUpdate],
     IAccountRepository,
 ):
-    def __init__(self, session: AsyncSession):
-        self.db = session
-
     async def get_by_user(
         self, user_id: UUID, skip: int = 0, limit: int = 100
     ) -> List[AccountBase]:
