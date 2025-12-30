@@ -1,16 +1,36 @@
+import asyncio
+import traceback
+from uuid import uuid4
+
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio.session import async_sessionmaker
+
+from agno.agent import Agent
+
+from core.settings import settings
+
+from infrastructure.database.models import AccountModel
+from infrastructure.repositories.account_repo import AccountRepository
+from infrastructure.repositories.transaction_repo import TransactionRepository
+from infrastructure.database.models import TransactionModel
+
 from domain.factories import create_postgres_db
 from domain.factories import create_pgvector_knowledge_db
 from domain.factories import create_google_embedder
 from domain.factories import create_google_model
-from core.settings import settings
-import asyncio
-import traceback
-
-from agno.agent import Agent
-
-from application.services.agent_service import AgentsService
+from domain.entities.transactions_entities import (
+    TransactionBase,
+    AccountBase,
+)
 
 from helpers.loging_helper import logger
+
+from application.services.account_service import AccountService
+from application.services.agent_service import AgentsService
+from application.services.transaction_service import TransactionService
+from application.tools.finance_tools import FinanceTools
+
+
 
 prompt = """
 # PERSONA: Financial Interaction Specialist (Agent Fi)
@@ -46,6 +66,20 @@ If the user uses the phrase "MANUAL REVIEW," immediately summarize the current s
 """
 
 
+async def _get_engine():
+    try:
+        return create_async_engine(
+            settings.get_async_postgres_url,
+            echo=False,  # Set to True for SQL query logging
+            pool_pre_ping=True,  # Verify connections before using them
+            pool_size=5,  # Number of connections to maintain
+            max_overflow=10,  # Additional connections when pool is exhausted
+        )
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        traceback.print_exc()
+
+
 async def main():
     try:
         up_content = prompt.replace("{{COMPANY_NAME}}", "B2B Skewer Manufacturer")
@@ -56,15 +90,35 @@ async def main():
             embedder_factory=create_google_embedder,
             vector_db_factory=create_pgvector_knowledge_db,
         )
-        agent: Agent = service.create_agent(
-            name="Financial Interaction Specialist",
-            model_id=settings.gemini_standard_model_name,
-            role="Financial Interaction Specialist",
-            instructions=up_content,
-            tools=[],
-        )
 
-        agent.print_response("What can you do?")
+        engine = await _get_engine()
+
+        async_session = async_sessionmaker(bind=engine, expire_on_commit=False)
+        async with async_session() as session:
+            t_repo = TransactionRepository(TransactionModel, TransactionBase, session)
+            t_service = TransactionService(t_repo)
+
+            a_repo = AccountRepository(AccountModel, AccountBase, session)
+            a_service = AccountService(a_repo)
+
+            user_id = str(uuid4())
+            tools = FinanceTools(
+                transaction_service=t_service,
+                account_service=a_service,
+                user_id=user_id,
+            )
+
+            agent: Agent = service.create_agent(
+                name="Financial Interaction Specialist",
+                model_id=settings.gemini_standard_model_name,
+                role="Financial Interaction Specialist",
+                instructions=up_content,
+                tools=[tools],
+            )
+
+            await agent.aprint_response("List my accounts and recent transactions.")
+            
+        await engine.dispose()
 
     except Exception as e:
         logger.error(f"An error occurred: {e}")
