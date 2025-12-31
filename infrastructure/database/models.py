@@ -58,7 +58,7 @@ class TransactionModel(Base):
     date = Column(DateTime(timezone=True), nullable=False)
     description = Column(String, nullable=False)
     merchant = Column(String, nullable=False)
-    embedding = Column(Vector(1536), nullable=False)
+    embedding = Column(Vector(1536), nullable=True)  # Using 1536 dimensions as per implementation plan
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()

@@ -63,9 +63,14 @@ class FinanceTools(Toolkit):
         import datetime
 
         if not date:
-            date = datetime.date.today().isoformat()
+            date_obj = datetime.datetime.now()
+        else:
+            try:
+                date_obj = datetime.datetime.fromisoformat(date)
+            except ValueError:
+                date_obj = datetime.datetime.strptime(date, "%Y-%m-%d")
 
-        current_time = datetime.datetime.now().isoformat()
+        current_time = datetime.datetime.now()
 
         try:
             transaction_data = TransactionCreate(
@@ -76,7 +81,7 @@ class FinanceTools(Toolkit):
                 account_id=account_id,
                 type=type,
                 currency=currency,
-                date=date,
+                date=date_obj,
                 status=TransactionStatus.COMPLETED,
                 created_at=current_time,
                 updated_at=current_time,
@@ -139,6 +144,7 @@ class FinanceTools(Toolkit):
 
     async def create_account(
         self,
+        name: str,
         account_type: str,
         balance: float,
         currency: str = "USD",
@@ -156,10 +162,11 @@ class FinanceTools(Toolkit):
         """
         import datetime
 
-        current_time = datetime.datetime.now().isoformat()
+        current_time = datetime.datetime.now()
         try:
             account_data = AccountCreate(
                 user_id=self.user_id,
+                name=name,
                 account_type=account_type,
                 balance=Decimal(str(balance)),
                 currency=currency,
@@ -250,7 +257,7 @@ class FinanceTools(Toolkit):
             if currency:
                 updated_data["currency"] = currency
 
-            updated_data["updated_at"] = datetime.datetime.now().isoformat()
+            updated_data["updated_at"] = datetime.datetime.now()
 
             # Create update object
             update_obj = AccountUpdate(**updated_data)

@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, field_validator
 from uuid import UUID, uuid4
 from decimal import Decimal
+from datetime import datetime
 
 from .enuns import TransactionType, TransactionStatus
 
@@ -13,15 +14,16 @@ class AccountBase(BaseModel):
         alias="_id",
     )
     user_id: str = Field(..., description="The ID of the user who owns the account")
+    name: str = Field(..., description="The name of the account")
     account_type: str = Field(
         ..., description="The type of the account (e.g., savings, checking)"
     )
     balance: Decimal = Field(..., description="The current balance of the account")
     currency: str = Field(..., description="The currency of the account")
-    created_at: str = Field(
+    created_at: datetime = Field(
         ..., description="The timestamp when the account was created"
     )
-    updated_at: str = Field(
+    updated_at: datetime = Field(
         ..., description="The timestamp when the account was last updated"
     )
 
@@ -45,11 +47,11 @@ class TransactionBase(BaseModel):
         ..., description="The current status of the transaction"
     )
     type: TransactionType = Field(..., description="The type of the transaction")
-    date: str = Field(..., description="The date when the transaction occurred")
-    created_at: str = Field(
+    date: datetime = Field(..., description="The date when the transaction occurred")
+    created_at: datetime = Field(
         ..., description="The timestamp when the transaction was created"
     )
-    updated_at: str = Field(
+    updated_at: datetime = Field(
         ..., description="The timestamp when the transaction was last updated"
     )
     description: str = Field(..., description="A brief description of the transaction")
@@ -67,6 +69,12 @@ class TransactionBase(BaseModel):
             raise ValueError("Amount must be positive")
         return v
 
+    @field_validator("name")
+    def name_must_not_be_empty(cls, v):
+        if not v or not v.strip():
+            raise ValueError("Name must not be empty")
+        return v
+
     @field_validator("currency")
     def currency_must_be_valid(cls, v):
         if len(v) != 3:
@@ -74,10 +82,9 @@ class TransactionBase(BaseModel):
         return v.upper()
 
     @field_validator("date", "created_at", "updated_at")
-    def date_must_be_iso_format(cls, v):
-        # Simple check for ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ)
-        if not isinstance(v, str) or len(v) < 10 or v[4] != "-" or v[7] != "-":
-            raise ValueError("Date must be in ISO 8601 format")
+    def date_must_be_valid(cls, v):
+        if not isinstance(v, datetime):
+            raise ValueError("Must be a valid datetime object")
         return v
 
     @field_validator("status")
@@ -100,6 +107,7 @@ class TransactionBase(BaseModel):
 # Data Transfer Objects
 class AccountCreate(AccountBase):
     user_id: str = Field(..., description="The ID of the user who owns the account")
+    name: str = Field(..., description="The name of the account")
     account_type: str = Field(
         ..., description="The type of the account (e.g., savings, checking)"
     )
@@ -121,6 +129,7 @@ class AccountCreate(AccountBase):
 
 class AccountUpdate(AccountBase):
     user_id: str = Field(..., description="The ID of the user who owns the account")
+    name: str = Field(..., description="The name of the account")
     account_type: str = Field(
         ..., description="The type of the account (e.g., savings, checking)"
     )
@@ -154,11 +163,11 @@ class TransactionCreate(TransactionBase):
         ..., description="The current status of the transaction"
     )
     type: TransactionType = Field(..., description="The type of the transaction")
-    date: str = Field(..., description="The date when the transaction occurred")
-    created_at: str = Field(
+    date: datetime = Field(..., description="The date when the transaction occurred")
+    created_at: datetime = Field(
         ..., description="The timestamp when the transaction was created"
     )
-    updated_at: str = Field(
+    updated_at: datetime = Field(
         ..., description="The timestamp when the transaction was last updated"
     )
     description: str = Field(..., description="A brief description of the transaction")
@@ -182,10 +191,9 @@ class TransactionCreate(TransactionBase):
         return v.upper()
 
     @field_validator("date", "created_at", "updated_at")
-    def date_must_be_iso_format(cls, v):
-        # Simple check for ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ)
-        if not isinstance(v, str) or len(v) < 10 or v[4] != "-" or v[7] != "-":
-            raise ValueError("Date must be in ISO 8601 format")
+    def date_must_be_valid(cls, v):
+        if not isinstance(v, datetime):
+            raise ValueError("Must be a valid datetime object")
         return v
 
     @field_validator("status")
@@ -223,11 +231,11 @@ class TransactionUpdate(TransactionBase):
         ..., description="The current status of the transaction"
     )
     type: TransactionType = Field(..., description="The type of the transaction")
-    date: str = Field(..., description="The date when the transaction occurred")
-    created_at: str = Field(
+    date: datetime = Field(..., description="The date when the transaction occurred")
+    created_at: datetime = Field(
         ..., description="The timestamp when the transaction was created"
     )
-    updated_at: str = Field(
+    updated_at: datetime = Field(
         ..., description="The timestamp when the transaction was last updated"
     )
     description: str = Field(..., description="A brief description of the transaction")
@@ -251,10 +259,9 @@ class TransactionUpdate(TransactionBase):
         return v.upper()
 
     @field_validator("date", "created_at", "updated_at")
-    def date_must_be_iso_format(cls, v):
-        # Simple check for ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SSZ)
-        if not isinstance(v, str) or len(v) < 10 or v[4] != "-" or v[7] != "-":
-            raise ValueError("Date must be in ISO 8601 format")
+    def date_must_be_valid(cls, v):
+        if not isinstance(v, datetime):
+            raise ValueError("Must be a valid datetime object")
         return v
 
     @field_validator("status")

@@ -101,7 +101,7 @@ async def main():
             a_repo = AccountRepository(AccountModel, AccountBase, session)
             a_service = AccountService(a_repo)
 
-            user_id = str(uuid4())
+            user_id = str('1a0fb514-d637-412b-b4a7-9d6bd2a09433')
             tools = FinanceTools(
                 transaction_service=t_service,
                 account_service=a_service,
@@ -116,7 +116,7 @@ async def main():
                 tools=[tools],
             )
 
-            await agent.aprint_response("List my accounts and recent transactions.")
+            await agent.aprint_response("Crie minha primeira conta corrente, como nome 'Teste', com saldo inicial de R$1000.", debug_mode=True)
             
         await engine.dispose()
 
