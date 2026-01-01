@@ -20,7 +20,7 @@ class FinanceTools(Toolkit):
         self,
         transaction_service: TransactionService,
         account_service: AccountService,
-        user_id: str,
+        user_id: UUID,
     ):
         super().__init__(name="finance_tools")
         self.transaction_service = transaction_service
@@ -39,7 +39,7 @@ class FinanceTools(Toolkit):
         amount: Decimal,
         description: str,
         merchant: str,
-        account_id: str,
+        account_id: UUID,
         type: TransactionType = TransactionType.EXPENSE,
         currency: str = "USD",
         date: str = "",  # optional, default to now if empty
@@ -104,9 +104,7 @@ class FinanceTools(Toolkit):
         """
         try:
             transactions = await self.transaction_service.get_user_transactions(
-                user_id=UUID(self.user_id)
-                if isinstance(self.user_id, str)
-                else self.user_id,
+                user_id=self.user_id,
                 limit=limit,
             )
             if not transactions:
@@ -128,9 +126,7 @@ class FinanceTools(Toolkit):
         """
         try:
             transactions = await self.transaction_service.get_pending_incomes(
-                user_id=UUID(self.user_id)
-                if isinstance(self.user_id, str)
-                else self.user_id
+                user_id=self.user_id
             )
             if not transactions:
                 return "No pending incomes found."
@@ -187,9 +183,7 @@ class FinanceTools(Toolkit):
         """
         try:
             accounts = await self.account_service.get_user_accounts(
-                user_id=UUID(self.user_id)
-                if isinstance(self.user_id, str)
-                else self.user_id
+                user_id=self.user_id
             )
             if not accounts:
                 return "No accounts found."
@@ -201,7 +195,7 @@ class FinanceTools(Toolkit):
         except Exception as e:
             return f"Failed to fetch accounts: {str(e)}"
 
-    async def get_account_balance(self, account_id: str) -> str:
+    async def get_account_balance(self, account_id: UUID) -> str:
         """
         Gets the balance of a specific account.
 
@@ -213,10 +207,8 @@ class FinanceTools(Toolkit):
         """
         try:
             balance = await self.account_service.get_account_balance(
-                user_id=UUID(self.user_id)
-                if isinstance(self.user_id, str)
-                else self.user_id,
-                account_id=UUID(account_id),
+                user_id=self.user_id,
+                account_id=account_id,
             )
             if balance is None:
                 return "Account not found or access denied."
@@ -226,7 +218,7 @@ class FinanceTools(Toolkit):
 
     async def update_account_info(
         self,
-        account_id: str,
+        account_id: UUID,
         account_type: Optional[str] = None,
         currency: Optional[str] = None,
     ) -> str:
@@ -244,9 +236,8 @@ class FinanceTools(Toolkit):
         import datetime
 
         try:
-            acc_uuid = UUID(account_id)
             # Fetch existing account
-            account = await self.account_service.get_account(acc_uuid)
+            account = await self.account_service.get_account(account_id)
             if not account or str(account.user_id) != str(self.user_id):
                 return "Account not found or access denied."
 
@@ -262,7 +253,7 @@ class FinanceTools(Toolkit):
             # Create update object
             update_obj = AccountUpdate(**updated_data)
 
-            result = await self.account_service.update_account(acc_uuid, update_obj)
+            result = await self.account_service.update_account(account_id, update_obj)
             if result:
                 return "Account updated successfully."
             return "Failed to update account."

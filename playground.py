@@ -24,12 +24,12 @@ from domain.entities.transactions_entities import (
 )
 
 from helpers.loging_helper import logger
+from helpers.uuid_handler import uuid_handler
 
 from application.services.account_service import AccountService
 from application.services.agent_service import AgentsService
 from application.services.transaction_service import TransactionService
 from application.tools.finance_tools import FinanceTools
-
 
 
 prompt = """
@@ -101,7 +101,9 @@ async def main():
             a_repo = AccountRepository(AccountModel, AccountBase, session)
             a_service = AccountService(a_repo)
 
-            user_id = str('1a0fb514-d637-412b-b4a7-9d6bd2a09433')
+            user_id = uuid_handler.string_to_uuid(
+                "1a0fb514-d637-412b-b4a7-9d6bd2a09433"
+            )
             tools = FinanceTools(
                 transaction_service=t_service,
                 account_service=a_service,
@@ -116,8 +118,11 @@ async def main():
                 tools=[tools],
             )
 
-            await agent.aprint_response("Crie minha primeira conta corrente, como nome 'Teste', com saldo inicial de R$1000.", debug_mode=True)
-            
+            await agent.aprint_response(
+                "Liste minhas contas",
+                debug_mode=True,
+            )
+
         await engine.dispose()
 
     except Exception as e:

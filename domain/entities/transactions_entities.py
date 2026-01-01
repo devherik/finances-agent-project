@@ -13,7 +13,7 @@ class AccountBase(BaseModel):
         description="The unique identifier for the account",
         alias="_id",
     )
-    user_id: str = Field(..., description="The ID of the user who owns the account")
+    user_id: UUID = Field(..., description="The ID of the user who owns the account")
     name: str = Field(..., description="The name of the account")
     account_type: str = Field(
         ..., description="The type of the account (e.g., savings, checking)"
@@ -38,7 +38,9 @@ class TransactionBase(BaseModel):
         description="The unique identifier for the transaction",
         alias="_id",
     )
-    user_id: str = Field(..., description="The ID of the user who owns the transaction")
+    user_id: UUID = Field(
+        ..., description="The ID of the user who owns the transaction"
+    )
     amount: Decimal = Field(
         ..., description="The amount of money involved in the transaction"
     )
@@ -58,21 +60,17 @@ class TransactionBase(BaseModel):
     merchant: str = Field(
         ..., description="The merchant associated with the transaction"
     )
-    account_id: str = Field(
+    account_id: UUID = Field(
         ..., description="The account ID associated with the transaction"
     )
-    user_id: str = Field(..., description="The user ID associated with the transaction")
+    user_id: UUID = Field(
+        ..., description="The user ID associated with the transaction"
+    )
 
     @field_validator("amount")
     def amount_must_be_positive(cls, v):
         if v <= 0:
             raise ValueError("Amount must be positive")
-        return v
-
-    @field_validator("name")
-    def name_must_not_be_empty(cls, v):
-        if not v or not v.strip():
-            raise ValueError("Name must not be empty")
         return v
 
     @field_validator("currency")
@@ -106,7 +104,7 @@ class TransactionBase(BaseModel):
 
 # Data Transfer Objects
 class AccountCreate(AccountBase):
-    user_id: str = Field(..., description="The ID of the user who owns the account")
+    user_id: UUID = Field(..., description="The ID of the user who owns the account")
     name: str = Field(..., description="The name of the account")
     account_type: str = Field(
         ..., description="The type of the account (e.g., savings, checking)"
@@ -128,7 +126,7 @@ class AccountCreate(AccountBase):
 
 
 class AccountUpdate(AccountBase):
-    user_id: str = Field(..., description="The ID of the user who owns the account")
+    user_id: UUID = Field(..., description="The ID of the user who owns the account")
     name: str = Field(..., description="The name of the account")
     account_type: str = Field(
         ..., description="The type of the account (e.g., savings, checking)"
@@ -150,11 +148,13 @@ class AccountUpdate(AccountBase):
 
 
 class AccountDelete(AccountBase):
-    user_id: str = Field(..., description="The ID of the user who owns the account")
+    user_id: UUID = Field(..., description="The ID of the user who owns the account")
 
 
 class TransactionCreate(TransactionBase):
-    user_id: str = Field(..., description="The ID of the user who owns the transaction")
+    user_id: UUID = Field(
+        ..., description="The ID of the user who owns the transaction"
+    )
     amount: Decimal = Field(
         ..., description="The amount of money involved in the transaction"
     )
@@ -174,7 +174,7 @@ class TransactionCreate(TransactionBase):
     merchant: str = Field(
         ..., description="The merchant associated with the transaction"
     )
-    account_id: str = Field(
+    account_id: UUID = Field(
         ..., description="The account ID associated with the transaction"
     )
 
@@ -222,7 +222,9 @@ class TransactionCreate(TransactionBase):
 
 
 class TransactionUpdate(TransactionBase):
-    user_id: str = Field(..., description="The ID of the user who owns the transaction")
+    user_id: UUID = Field(
+        ..., description="The ID of the user who owns the transaction"
+    )
     amount: Decimal = Field(
         ..., description="The amount of money involved in the transaction"
     )
@@ -242,7 +244,7 @@ class TransactionUpdate(TransactionBase):
     merchant: str = Field(
         ..., description="The merchant associated with the transaction"
     )
-    account_id: str = Field(
+    account_id: UUID = Field(
         ..., description="The account ID associated with the transaction"
     )
 
@@ -290,4 +292,6 @@ class TransactionUpdate(TransactionBase):
 
 
 class TransactionDelete(TransactionBase):
-    user_id: str = Field(..., description="The ID of the user who owns the transaction")
+    user_id: UUID = Field(
+        ..., description="The ID of the user who owns the transaction"
+    )
