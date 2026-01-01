@@ -137,6 +137,18 @@ class ITransactionRepository(
         """Custom query for dashboarding."""
         pass
 
+    @abstractmethod
+    async def get_balance_by_period(
+        self, user_id: UUID, account_id: UUID, start_date: datetime, end_date: datetime
+    ) -> float:
+        pass
+
+    @abstractmethod
+    async def get_transactions_by_text(
+        self, user_id: UUID, text: str, skip: int = 0, limit: int = 100
+    ) -> List[TransactionBase]:
+        pass
+
 
 class IAgentRunRepository(BaseRepository[AgentRunBase, AgentRunCreate, AgentRunUpdate]):
     """

@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
@@ -62,6 +63,20 @@ class TransactionService:
             List of transactions
         """
         return await self.repository.get_by_user(user_id, skip, limit)
+
+    async def get_balance_by_period(
+        self, user_id: UUID, account_id: UUID, start_date: datetime, end_date: datetime
+    ) -> float:
+        return await self.repository.get_balance_by_period(
+            user_id, account_id, start_date, end_date
+        )
+
+    async def get_transactions_by_text(
+        self, user_id: UUID, text: str, skip: int = 0, limit: int = 100
+    ) -> List[TransactionBase]:
+        return await self.repository.get_transactions_by_text(
+            user_id, text, skip, limit
+        )
 
     async def get_pending_incomes(self, user_id: UUID) -> List[TransactionBase]:
         """

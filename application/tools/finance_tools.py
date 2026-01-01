@@ -117,6 +117,63 @@ class FinanceTools(Toolkit):
         except Exception as e:
             return f"Failed to fetch transactions: {str(e)}"
 
+    async def get_my_transactions_by_text(self, text: str, limit: int = 5) -> str:
+        """
+        Retrieves the user's recent transactions based on a search text.
+
+        Args:
+            text: The search text to filter transactions.
+            limit: The maximum number of transactions to return. Defaults to 5.
+
+        Returns:
+            A formatted string list of transactions matching the search text.
+        """
+        try:
+            transactions = await self.transaction_service.get_transactions_by_text(
+                user_id=self.user_id,
+                text=text,
+                limit=limit,
+            )
+            if not transactions:
+                return "No recent transactions found."
+
+            result = "Recent Transactions:\n"
+            for t in transactions:
+                result += f"- {t.date}: {t.description} ({t.merchant}) - {t.amount} {t.currency} [{t.type.value}]\n"
+            return result
+        except Exception as e:
+            return f"Failed to fetch transactions: {str(e)}"
+
+    async def get_balance_by_period(
+        self, start_date: str, end_date: str, account_id: UUID
+    ) -> str:
+        """
+        Retrieves the user's recent transactions based on a search text.
+
+        Args:
+            text: The search text to filter transactions.
+            limit: The maximum number of transactions to return. Defaults to 5.
+
+        Returns:
+            A formatted string list of transactions matching the search text.
+        """
+        try:
+            transactions = await self.transaction_service.get_balance_by_period(
+                user_id=self.user_id,
+                account_id=account_id,
+                start_date=start_date,
+                end_date=end_date,
+            )
+            if not transactions:
+                return "No recent transactions found."
+
+            result = "Recent Transactions:\n"
+            for t in transactions:
+                result += f"- {t.date}: {t.description} ({t.merchant}) - {t.amount} {t.currency} [{t.type.value}]\n"
+            return result
+        except Exception as e:
+            return f"Failed to fetch transactions: {str(e)}"
+
     async def get_pending_incomes(self) -> str:
         """
         Retrieves all pending income transactions.
