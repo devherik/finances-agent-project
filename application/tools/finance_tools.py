@@ -190,7 +190,7 @@ class FinanceTools(Toolkit):
 
             result = "Your Accounts:\n"
             for acc in accounts:
-                result += f"- {acc.account_type.capitalize()}: {acc.balance} {acc.currency} (ID: {acc.id})\n"
+                result += f"- {acc.account_type.capitalize()}: {acc.balance} {acc.currency} (ID: {acc.id}, NAME: {acc.name})\n"
             return result
         except Exception as e:
             return f"Failed to fetch accounts: {str(e)}"

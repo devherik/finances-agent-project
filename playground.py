@@ -1,6 +1,5 @@
 import asyncio
 import traceback
-from uuid import uuid4
 
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.ext.asyncio.session import async_sessionmaker
@@ -120,6 +119,7 @@ async def main():
 
             await agent.aprint_response(
                 "Liste minhas contas",
+                user_id=uuid_handler.uuid_to_string(user_id),
                 debug_mode=True,
             )
 
