@@ -186,12 +186,13 @@ class AgentsService:
 
         return Agent(**base_config)
 
-    def persist_agent_run(self, agent_run: AgentRunCreate):
+    async def persist_agent_run(self, agent_run: AgentRunCreate):
         """
         Private method to persist agent run using injected repository.
         """
         if not self.repository:
-            raise ValueError("repository is required for agent run persistence")
+            print("Repository is not initialized. Please initialize it first.")
+            return
 
         if not agent_run.embedding:
             embedder = self.embedder_factory()
@@ -199,7 +200,7 @@ class AgentsService:
 
         validate_obj = AgentRunCreate.model_validate(agent_run)
 
-        return self.repository.save_interaction(validate_obj)
+        return await self.repository.save_interaction(validate_obj)
 
     def _create_knowledge_base(self, table_name: str, max_documents: int):
         """

@@ -22,7 +22,7 @@ class AgentMemoryRepository(IAgentMemoryRepository):
         Requires a 'memories' table with a vector column (pgvector).
         """
         print(run)
-        self.db.add(AgentMemoryModel(**run.model_dump()))
+        self.db.add(run.model_dump())
         await self.db.commit()
 
     async def search_similar_interactions(

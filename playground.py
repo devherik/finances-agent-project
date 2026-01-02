@@ -1,3 +1,4 @@
+from infrastructure.repositories.agent_memory_repo import AgentMemoryRepository
 from domain.entities.agent_entities import AgentRunCreate
 import asyncio
 import traceback
@@ -80,20 +81,35 @@ async def _get_engine():
         traceback.print_exc()
 
 
-async def _persist_agent_run():
-    pass
+async def _persist_agent_run(
+    agent: Agent,
+    user_id: str,
+    user_input: str,
+    response: AgentRunCreate,
+    service: AgentsService,
+):
+    try:
+        agent_run = AgentRunCreate(
+            agent_name=agent.name,
+            model_name=agent.model.id,
+            user_id=user_id,
+            prompt=user_input,
+            input_context={"user_input": user_input},
+            response=response.content,
+        )
+        try:
+            await service.persist_agent_run(agent_run)
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            traceback.print_exc()
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        traceback.print_exc()
 
 
 async def main():
     try:
         up_content = prompt.replace("{{COMPANY_NAME}}", "B2B Skewer Manufacturer")
-        service = AgentsService(
-            storage=create_postgres_db(),
-            memory=True,
-            model=create_google_model(),
-            embedder_factory=create_google_embedder,
-            vector_db_factory=create_pgvector_knowledge_db,
-        )
 
         engine = await _get_engine()
 
@@ -105,9 +121,21 @@ async def main():
             a_repo = AccountRepository(AccountModel, AccountBase, session)
             a_service = AccountService(a_repo)
 
+            arun_repo = AgentMemoryRepository(session)
+
             user_id = uuid_handler.string_to_uuid(
                 "1a0fb514-d637-412b-b4a7-9d6bd2a09433"
             )
+
+            service = AgentsService(
+                storage=create_postgres_db(),
+                memory=True,
+                model=create_google_model(),
+                repository=arun_repo,
+                embedder_factory=create_google_embedder,
+                vector_db_factory=create_pgvector_knowledge_db,
+            )
+
             tools = FinanceTools(
                 transaction_service=t_service,
                 account_service=a_service,
@@ -129,6 +157,14 @@ async def main():
             )
             print(f"Agent: {response.content}")
 
+            await _persist_agent_run(
+                agent,
+                user_id,
+                "Liste minhas contas e me mostre o saldo de cada uma.",
+                response,
+                service,
+            )
+
             while True:
                 user_input = input("User: ")
                 if user_input.lower() == "exit":
@@ -140,16 +176,7 @@ async def main():
                 )
                 print(f"Agent: {response.content}")
 
-                agent_run = AgentRunCreate(
-                    user_id=user_id,
-                    prompt=user_input,
-                    response=response.content,
-                )
-                try:
-                    service.persist_agent_run(agent_run)
-                except Exception as e:
-                    logger.error(f"An error occurred: {e}")
-                    traceback.print_exc()
+                await _persist_agent_run(agent, user_id, user_input, response, service)
 
         await engine.dispose()
 
