@@ -92,3 +92,15 @@ class AccountService:
             The updated account if found, None otherwise
         """
         return await self.repository.update(account_id, account_update)
+
+    async def delete_account(self, account_id: UUID) -> Optional[AccountBase]:
+        """
+        Delete an existing account.
+
+        Args:
+            account_id: The ID of the account to delete
+
+        Returns:
+            The deleted account if found, None otherwise
+        """
+        return await self.repository.delete(account_id)

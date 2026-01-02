@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 from typing import List
 
+from domain.entities.agent_entities import AgentRunCreate
 from domain.repositories import IAgentMemoryRepository
 from domain.entities.agent_entities import AgentRunMemoryBase
 
@@ -15,20 +16,13 @@ class AgentMemoryRepository(IAgentMemoryRepository):
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def save_interaction(
-        self, user_id: UUID, prompt: str, response: str, embedding: List[float]
-    ) -> None:
+    async def save_interaction(self, run: AgentRunCreate) -> None:
         """
         Saves the interaction and its embedding.
         Requires a 'memories' table with a vector column (pgvector).
         """
-        memory = AgentMemoryModel(
-            user_id=user_id,
-            prompt=prompt,
-            response=response,
-            embedding=embedding,
-        )
-        self.db.add(memory)
+        print(run)
+        self.db.add(AgentMemoryModel(**run.model_dump()))
         await self.db.commit()
 
     async def search_similar_interactions(

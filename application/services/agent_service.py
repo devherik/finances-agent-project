@@ -1,6 +1,9 @@
+from typing import Optional, Callable, Any
+
+from domain.entities.agent_entities import AgentRunCreate
 from domain.factories import create_redis_memory_db
 from domain.factories import create_google_model
-from typing import Optional, Callable, Any
+from domain.repositories import IAgentMemoryRepository
 
 from agno.agent import Agent
 from agno.memory import MemoryManager
@@ -22,6 +25,7 @@ class AgentsService:
         storage: Any,  # agno.storage.base.Storage
         memory: bool,  # when True, enables agentic memory
         model: Any,  # agno.models.base.Model
+        repository: Optional[IAgentMemoryRepository] = None,
         embedder_factory: Optional[Callable[[], Any]] = None,
         vector_db_factory: Optional[Callable[[str], Any]] = None,
     ):
@@ -35,6 +39,7 @@ class AgentsService:
             embedder_factory: Factory function to create embedder instances (optional)
             vector_db_factory: Factory function to create vector db instances (optional)
         """
+        self.repository = repository
         self.storage = storage
         self.memory = memory
         self.model = model
@@ -180,6 +185,21 @@ class AgentsService:
             base_config["search_knowledge"] = True
 
         return Agent(**base_config)
+
+    def persist_agent_run(self, agent_run: AgentRunCreate):
+        """
+        Private method to persist agent run using injected repository.
+        """
+        if not self.repository:
+            raise ValueError("repository is required for agent run persistence")
+
+        if not agent_run.embedding:
+            embedder = self.embedder_factory()
+            agent_run.embedding = embedder.get_embedding(agent_run.response)
+
+        validate_obj = AgentRunCreate.model_validate(agent_run)
+
+        return self.repository.save_interaction(validate_obj)
 
     def _create_knowledge_base(self, table_name: str, max_documents: int):
         """

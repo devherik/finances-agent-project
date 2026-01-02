@@ -1,7 +1,7 @@
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from datetime import datetime
 from uuid import UUID, uuid4
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 
 from .enuns import AgentRunStatus
 
@@ -53,7 +53,38 @@ class AgentRunCreate(AgentRunBase):
     REQUEST: Created when the agent starts working.
     """
 
-    pass
+    user_id: UUID = Field(..., description="The user who triggered this run")
+    prompt: str = Field(..., description="The prompt sent to the agent")
+    response: str = Field(..., description="The response from the agent")
+    embedding: Optional[List[float]] = Field(
+        None, description="The embedding of the response"
+    )
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_validator("embedding", mode="before")
+    def validate_embedding(cls, v):
+        if not isinstance(v, list):
+            raise ValueError("Embedding must be a list of floats")
+        return v
+
+    @field_validator("response", mode="before")
+    def validate_response(cls, v):
+        if not isinstance(v, str):
+            raise ValueError("Response must be a string")
+        return v
+
+    @field_validator("prompt", mode="before")
+    def validate_prompt(cls, v):
+        if not isinstance(v, str):
+            raise ValueError("Prompt must be a string")
+        return v
+
+    @field_validator("user_id", mode="before")
+    def validate_user_id(cls, v):
+        if not isinstance(v, UUID):
+            raise ValueError("User ID must be a UUID")
+        return v
 
 
 class AgentRunUpdate(BaseModel):

@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Optional
+from typing import Optional, Any
 from uuid import UUID
 
 from agno.tools import Toolkit
@@ -29,10 +29,37 @@ class FinanceTools(Toolkit):
         self.register(self.create_transaction)
         self.register(self.get_my_transactions)
         self.register(self.get_pending_incomes)
+        self.register(self.get_balance_by_period)
+        self.register(self.get_my_transactions_by_text)
         self.register(self.create_account)
         self.register(self.get_my_accounts)
         self.register(self.get_account_balance)
         self.register(self.update_account_info)
+        self.register(self.delete_my_account)
+
+    def _parse_uuid(self, value: Any) -> UUID:
+        """
+        Robustly parses a UUID from various input formats.
+        Handles raw UUID objects, strings, and dictionaries common in LLM hallucinations.
+        """
+        if isinstance(value, UUID):
+            return value
+
+        if isinstance(value, str):
+            try:
+                return UUID(value)
+            except ValueError:
+                pass
+
+        if isinstance(value, dict):
+            # Check for common ID keys in LLM structures
+            for key in ["id", "account_id", "uuid", "value"]:
+                if key in value:
+                    return self._parse_uuid(value[key])
+
+        raise ValueError(
+            f"Invalid UUID format: {value}. Expected UUID string or dict with 'id' key."
+        )
 
     async def create_transaction(
         self,
@@ -45,20 +72,26 @@ class FinanceTools(Toolkit):
         date: str = "",  # optional, default to now if empty
     ) -> str:
         """
-        Records a new financial transaction (expense or income).
-        Use this when the user mentions buying something, spending money, or receiving income.
+        Records a new financial transaction (expense or income) for the authenticated user.
+        Use this tool whenever the user reports spending money, buying an item/service, or receiving funds.
 
         Args:
-            amount: The amount of the transaction. Must be positive.
-            description: A brief description of what was purchased or the income source.
-            merchant: The name of the merchant or payer.
-            account_id: The ID of the account to charge/credit.
-            type: The type of transaction (EXPENSE or INCOME). Defaults to EXPENSE.
-            currency: The 3-letter currency code (e.g., 'USD', 'BRL'). Defaults to 'USD'.
-            date: The date of the transaction in ISO 8601 format (YYYY-MM-DD). If not provided, current date is used.
+            amount (Decimal): The numeric value of the transaction. Must be a positive value.
+                Example: 45.50
+            description (str): A descriptive name for the transaction that helps identify it later.
+                Example: "Grocery shopping", "Freelance Payment"
+            merchant (str): The entity involved in the transaction (store name or payer).
+                Example: "Walmart", "Client ABC"
+            account_id (UUID): The unique ID of the financial account to be debited (for expenses)
+                or credited (for income). Use 'get_my_accounts' to find valid account IDs.
+            type (TransactionType, optional): Specifies if it's an 'EXPENSE' or 'INCOME'.
+                Defaults to TransactionType.EXPENSE.
+            currency (str, optional): The 3-letter ISO currency code. Defaults to 'USD'.
+            date (str, optional): The transaction date in ISO 8601 format (YYYY-MM-DD).
+                If omitted, the system defaults to the current date. Example: "2023-12-25"
 
         Returns:
-            A confirmation message with the transaction ID.
+            str: A confirmation message containing the newly created transaction's ID or an error message.
         """
         import datetime
 
@@ -73,12 +106,13 @@ class FinanceTools(Toolkit):
         current_time = datetime.datetime.now()
 
         try:
+            parsed_account_id = self._parse_uuid(account_id)
             transaction_data = TransactionCreate(
                 user_id=self.user_id,
                 amount=amount,
                 description=description,
                 merchant=merchant,
-                account_id=account_id,
+                account_id=parsed_account_id,
                 type=type,
                 currency=currency,
                 date=date_obj,
@@ -94,13 +128,16 @@ class FinanceTools(Toolkit):
 
     async def get_my_transactions(self, limit: int = 5) -> str:
         """
-        Retrieves the user's recent transactions.
+        Fetches a list of the user's most recent financial transactions.
+        Use this to give the user an overview of their latest spending or income activity.
 
         Args:
-            limit: The maximum number of transactions to return. Defaults to 5.
+            limit (int, optional): The maximum number of transactions to retrieve.
+                Best used to avoid overwhelming the user with too much data. Defaults to 5.
 
         Returns:
-            A formatted string list of transactions.
+            str: A human-readable formatted list of transactions including date, description,
+                merchant, amount, currency, and type.
         """
         try:
             transactions = await self.transaction_service.get_user_transactions(
@@ -119,14 +156,16 @@ class FinanceTools(Toolkit):
 
     async def get_my_transactions_by_text(self, text: str, limit: int = 5) -> str:
         """
-        Retrieves the user's recent transactions based on a search text.
+        Searches for transactions using a specific text keyword or phrase.
+        Use this when the user asks about specific purchases (e.g., "Show me my transactions at Amazon")
+        or categories (e.g., "Find all grocery transactions").
 
         Args:
-            text: The search text to filter transactions.
-            limit: The maximum number of transactions to return. Defaults to 5.
+            text (str): The keyword, merchant name, or description piece to search for.
+            limit (int, optional): Maximum number of matching transactions to return. Defaults to 5.
 
         Returns:
-            A formatted string list of transactions matching the search text.
+            str: A formatted list of matching transactions or a message indicating none were found.
         """
         try:
             transactions = await self.transaction_service.get_transactions_by_text(
@@ -148,19 +187,22 @@ class FinanceTools(Toolkit):
         self, start_date: str, end_date: str, account_id: UUID
     ) -> str:
         """
-        Retrieves the user's recent transactions based on a search text.
+        Calculates or summarizes transactions for a specific account within a given date range.
+        Use this to answer questions about spending or income over a specific month, week, or year.
 
         Args:
-            text: The search text to filter transactions.
-            limit: The maximum number of transactions to return. Defaults to 5.
+            start_date (str): The beginning of the period in 'YYYY-MM-DD' format.
+            end_date (str): The end of the period in 'YYYY-MM-DD' format.
+            account_id (UUID): The ID of the account to analyze.
 
         Returns:
-            A formatted string list of transactions matching the search text.
+            str: A formatted list of transactions found within the period for that account.
         """
         try:
+            parsed_account_id = self._parse_uuid(account_id)
             transactions = await self.transaction_service.get_balance_by_period(
                 user_id=self.user_id,
-                account_id=account_id,
+                account_id=parsed_account_id,
                 start_date=start_date,
                 end_date=end_date,
             )
@@ -176,10 +218,11 @@ class FinanceTools(Toolkit):
 
     async def get_pending_incomes(self) -> str:
         """
-        Retrieves all pending income transactions.
+        Retrieves income entries that have been recorded but might not yet be fully processed or cleared.
+        Use this when the user asks about expected payments or upcoming income.
 
         Returns:
-             A formatted string list of pending incomes.
+             str: A formatted list of pending income transactions.
         """
         try:
             transactions = await self.transaction_service.get_pending_incomes(
@@ -203,15 +246,17 @@ class FinanceTools(Toolkit):
         currency: str = "USD",
     ) -> str:
         """
-        Creates a new financial account (e.g., checking, savings).
+        Creates a new financial account for the user to track balances and transactions.
+        Use this when the user wants to start tracking a new bank account, credit card, or cash wallet.
 
         Args:
-            account_type: The type of account (e.g., 'checking', 'savings', 'investment').
-            balance: Initial balance. Must be positive.
-            currency: Currency code (e.g., 'USD'). Defaults to 'USD'.
+            name (str): A user-defined name for the account (e.g., "Personal Checking", "Business Visa").
+            account_type (str): The category of the account (e.g., 'checking', 'savings', 'credit_card', 'investment').
+            balance (float): The initial opening balance of the account. Must be provided as a float.
+            currency (str, optional): The 3-letter ISO currency code. Defaults to 'USD'.
 
         Returns:
-            Confirmation message with account ID.
+            str: A success message with the new account UUID or an error message.
         """
         import datetime
 
@@ -233,10 +278,11 @@ class FinanceTools(Toolkit):
 
     async def get_my_accounts(self) -> str:
         """
-        Retrieves the user's accounts.
+        Lists all financial accounts owned by the current user.
+        Crucial for obtaining account_ids required by other tools like 'create_transaction' or 'get_account_balance'.
 
         Returns:
-            A formatted string list of accounts.
+            str: A formatted list showing account type, balance, currency, ID, and Name for each account.
         """
         try:
             accounts = await self.account_service.get_user_accounts(
@@ -254,18 +300,20 @@ class FinanceTools(Toolkit):
 
     async def get_account_balance(self, account_id: UUID) -> str:
         """
-        Gets the balance of a specific account.
+        Provides the current available balance for a specific account.
+        Use this tool when the user asks "How much money do I have in my savings?" or "What's my balance?".
 
         Args:
-            account_id: The ID of the account.
+            account_id (UUID): The unique identifier of the account. Obtain this from 'get_my_accounts'.
 
         Returns:
-            The balance or error message.
+            str: The current balance formatted with the currency, or an error/not found message.
         """
         try:
+            parsed_account_id = self._parse_uuid(account_id)
             balance = await self.account_service.get_account_balance(
                 user_id=self.user_id,
-                account_id=account_id,
+                account_id=parsed_account_id,
             )
             if balance is None:
                 return "Account not found or access denied."
@@ -280,21 +328,23 @@ class FinanceTools(Toolkit):
         currency: Optional[str] = None,
     ) -> str:
         """
-        Updates account information.
+        Modifies the properties of an existing financial account.
+        Use this when the user wants to change an account's category or default currency.
 
         Args:
-            account_id: The ID of the account to update.
-            account_type: New account type (optional).
-            currency: New currency (optional).
+            account_id (UUID): The ID of the account to be updated.
+            account_type (Optional[str], optional): The new category for the account (e.g., 'savings').
+            currency (Optional[str], optional): The new 3-letter currency code (e.g., 'EUR').
 
         Returns:
-            Confirmation message or error.
+            str: A confirmation of the update or an error message.
         """
         import datetime
 
         try:
+            parsed_account_id = self._parse_uuid(account_id)
             # Fetch existing account
-            account = await self.account_service.get_account(account_id)
+            account = await self.account_service.get_account(parsed_account_id)
             if not account or str(account.user_id) != str(self.user_id):
                 return "Account not found or access denied."
 
@@ -310,9 +360,39 @@ class FinanceTools(Toolkit):
             # Create update object
             update_obj = AccountUpdate(**updated_data)
 
-            result = await self.account_service.update_account(account_id, update_obj)
+            result = await self.account_service.update_account(
+                parsed_account_id, update_obj
+            )
             if result:
                 return "Account updated successfully."
             return "Failed to update account."
         except Exception as e:
             return f"Error updating account: {str(e)}"
+
+    async def delete_my_account(
+        self,
+        account_id: UUID,
+    ) -> str:
+        """
+        Permanently removes a financial account from the user's profile.
+        WARNING: This action is destructive. Use only when the user explicitly requests to delete an account.
+
+        Args:
+            account_id (UUID): The ID of the account to delete.
+
+        Returns:
+            str: A confirmation message of deletion or an error message.
+        """
+        try:
+            parsed_account_id = self._parse_uuid(account_id)
+            # Fetch existing account
+            account = await self.account_service.get_account(parsed_account_id)
+            if not account or str(account.user_id) != str(self.user_id):
+                return "Account not found or access denied."
+
+            result = await self.account_service.delete_account(parsed_account_id)
+            if result:
+                return "Account deleted successfully."
+            return "Failed to delete account."
+        except Exception as e:
+            return f"Error deleting account: {str(e)}"

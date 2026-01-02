@@ -1,3 +1,4 @@
+from domain.entities.agent_entities import AgentRunCreate
 import asyncio
 import traceback
 
@@ -79,6 +80,10 @@ async def _get_engine():
         traceback.print_exc()
 
 
+async def _persist_agent_run():
+    pass
+
+
 async def main():
     try:
         up_content = prompt.replace("{{COMPANY_NAME}}", "B2B Skewer Manufacturer")
@@ -117,17 +122,45 @@ async def main():
                 tools=[tools],
             )
 
-            await agent.aprint_response(
-                "Liste minhas contas",
+            response = await agent.arun(
+                "Liste minhas contas e me mostre o saldo de cada uma.",
                 user_id=uuid_handler.uuid_to_string(user_id),
                 debug_mode=True,
             )
+            print(f"Agent: {response.content}")
+
+            while True:
+                user_input = input("User: ")
+                if user_input.lower() == "exit":
+                    break
+                response = await agent.arun(
+                    user_input,
+                    user_id=uuid_handler.uuid_to_string(user_id),
+                    debug_mode=True,
+                )
+                print(f"Agent: {response.content}")
+
+                agent_run = AgentRunCreate(
+                    user_id=user_id,
+                    prompt=user_input,
+                    response=response.content,
+                )
+                try:
+                    service.persist_agent_run(agent_run)
+                except Exception as e:
+                    logger.error(f"An error occurred: {e}")
+                    traceback.print_exc()
 
         await engine.dispose()
 
     except Exception as e:
         logger.error(f"An error occurred: {e}")
         traceback.print_exc()
+        await engine.dispose()
+
+    except KeyboardInterrupt:
+        logger.info("Agent run stopped by user.")
+        await engine.dispose()
 
 
 if __name__ == "__main__":

@@ -54,8 +54,8 @@ class BaseRepository(ABC, Generic[T, CreateT, UpdateT]):
         pass
 
     @abstractmethod
-    async def delete(self, id: UUID) -> bool:
-        """Deletes a record. Returns True if successful."""
+    async def delete(self, id: UUID) -> Optional[T]:
+        """Deletes a record. Returns the deleted record if successful."""
         pass
 
 
@@ -167,9 +167,7 @@ class IAgentMemoryRepository(ABC):
     """
 
     @abstractmethod
-    async def save_interaction(
-        self, user_id: UUID, prompt: str, response: str, embedding: List[float]
-    ) -> None:
+    async def save_interaction(self, run: AgentRunCreate) -> None:
         pass
 
     @abstractmethod
