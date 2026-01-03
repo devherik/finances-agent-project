@@ -11,3 +11,4 @@ wheels/
 core/.env
 .env
 playground.py
+agent_os.py
