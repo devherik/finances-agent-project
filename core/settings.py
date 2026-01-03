@@ -49,6 +49,13 @@ class Settings(BaseSettings):
         os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
     )
 
+    # Smart POS
+    smartpos_api_key: str = os.getenv("SMARTPOS_API_KEY", "your_smartpos_api_key")
+    smartpos_api_secret: str = os.getenv(
+        "SMARTPOS_API_SECRET", "your_smartpos_api_secret"
+    )
+    smartpos_api_url: str = os.getenv("SMARTPOS_API_URL", "your_smartpos_api_url")
+
     @property
     def is_dev(self) -> bool:
         return os.getenv("IS_DEV", "True").lower() in ("true", "1", "yes")
