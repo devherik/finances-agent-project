@@ -2,10 +2,13 @@ from fastapi import Depends, Request
 from fastapi.exceptions import HTTPException
 from fastapi.security import OAuth2PasswordBearer
 
+import httpx
+
 from sqlalchemy.ext.asyncio.engine import AsyncEngine
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
+from typing import Any
 from jose.exceptions import JWTError
 from typing import Annotated, AsyncGenerator
 from passlib.context import CryptContext
@@ -56,6 +59,15 @@ async def get_postgres_async_session(
     async_session = async_sessionmaker(bind=engine, expire_on_commit=False)
     async with async_session() as session:
         yield session
+
+
+async def get_httpx_client() -> Any:
+    """
+    Returns a new httpx async client for the API.
+    Use with 'async with' statement. When execution returns here (after yield), the client is automatically closed.
+    """
+    async with httpx.AsyncClient() as client:
+        yield client
 
 
 def get_user_repository(
