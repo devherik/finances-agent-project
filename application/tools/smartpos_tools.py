@@ -50,17 +50,17 @@ class SmartPosService:
         is_retry: bool = False,
     ) -> list[SaleBase]:
         try:
-            async with get_httpx_client() as client:
-                response = await client.get(
-                    f"{self.base_url}/sales",
-                    params={
-                        "start": start.isoformat(),
-                        "end": end.isoformat(),
-                        "status_nf": status.value,
-                    },
-                )
-                response.raise_for_status()
-                return response.json()
+            client = await get_httpx_client()
+            response = await client.get(
+                f"{self.base_url}/sales",
+                params={
+                    "start": start.isoformat(),
+                    "end": end.isoformat(),
+                    "status_nf": status.value,
+                },
+            )
+            response.raise_for_status()
+            return response.json()
         except httpx.HTTPStatusError as e:
             if not is_retry:
                 await self.get_sales(start, end, is_retry=True)
@@ -75,12 +75,12 @@ class SmartPosService:
         is_retry: bool = False,
     ) -> list[SaleItemBase]:
         try:
-            async with get_httpx_client() as client:
-                response = await client.get(
-                    f"{self.base_url}/sales/{sale_id}/items",
-                )
-                response.raise_for_status()
-                return response.json()
+            client = await get_httpx_client()
+            response = await client.get(
+                f"{self.base_url}/sales/{sale_id}/items",
+            )
+            response.raise_for_status()
+            return response.json()
         except httpx.HTTPStatusError as e:
             if not is_retry:
                 await self.get_sale_items(sale_id, is_retry=True)
