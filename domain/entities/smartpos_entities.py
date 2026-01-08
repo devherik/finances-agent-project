@@ -23,6 +23,12 @@ class SmartPosNfStatus(Enum):
     SUCCESS = "SUCCESS"
 
 
+class SmartPosStock(Enum):
+    ADD = "ADD"
+    REMOVE = "REMOVE"
+    SET = "SET"
+
+
 class SmartPosApiError(BaseModel):
     """
     The error of the API
@@ -282,3 +288,18 @@ class SaleItemBase(BaseModel):
     warranty_duration: datetime = Field(description="Duração da garantia")
     warranty_type: str = Field(description="Tipo da garantia")
     warranty_time: int = Field(description="Tempo da garantia")
+
+class ProductBase(BaseModel):
+    id: int = Field(description="ID do produto")
+    name: str = Field(description="Nome do produto")
+    description: str = Field(description="Descrição do produto")
+    sell_value: Decimal = Field(description="Valor de venda")
+    cost_value: Decimal = Field(description="Valor de custo")
+    ean_code: str = Field(description="Código EAN")
+    net_weight: Decimal = Field(description="Peso líquido")
+    gross_weight: Decimal = Field(description="Peso bruto")
+    minimum_stock: int = Field(description="Estoque mínimo")
+    observation: str = Field(description="Observação")
+    ex_tipi: str = Field(description="Ex Tipi")
+    cest: str = Field(description="CEST")
+    is_fractional: bool = Field(description="Se é fracionário")
