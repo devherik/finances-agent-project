@@ -303,3 +303,4 @@ class ProductBase(BaseModel):
     ex_tipi: str = Field(description="Ex Tipi")
     cest: str = Field(description="CEST")
     is_fractional: bool = Field(description="Se é fracionário")
+    stock_quantity: Decimal = Field(description="Quantidade em estoque")
